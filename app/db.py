@@ -408,3 +408,27 @@ def notification_stats():
             "active_channels": active_channels,
             "active_subscriptions": subscriptions,
         }
+
+
+if os.environ.get("DATABASE_HOST"):
+    from app import db_pg as _pg
+
+    connect = _pg.connect
+    init = _pg.init
+    list_channels = _pg.list_channels
+    update_channel = _pg.update_channel
+    list_subscriptions = _pg.list_subscriptions
+    upsert_subscription = _pg.upsert_subscription
+    log_notification = _pg.log_notification
+    list_logs = _pg.list_logs
+    create_analysis_run = _pg.create_analysis_run
+    finish_analysis_run = _pg.finish_analysis_run
+    insert_market_prices = _pg.insert_market_prices
+    latest_market_prices = _pg.latest_market_prices
+    insert_market_score = _pg.insert_market_score
+    latest_market_score = _pg.latest_market_score
+    insert_asset_signals = _pg.insert_asset_signals
+    latest_asset_signals = _pg.latest_asset_signals
+    insert_daily_report = _pg.insert_daily_report
+    latest_daily_report = _pg.latest_daily_report
+    notification_stats = _pg.notification_stats
