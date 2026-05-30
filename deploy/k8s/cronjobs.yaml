@@ -1,0 +1,139 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: morning-report-cronjob
+  namespace: apps
+spec:
+  schedule: "30 7 * * 1-5"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+              command: ["python", "-m", "app.jobs", "morning"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: market-open-watch-cronjob
+  namespace: apps
+spec:
+  schedule: "50 8 * * 1-5"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+              command: ["python", "-m", "app.jobs", "market-open"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: evening-report-cronjob
+  namespace: apps
+spec:
+  schedule: "30 18 * * 1-5"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+              command: ["python", "-m", "app.jobs", "evening"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: weekly-report-cronjob
+  namespace: apps
+spec:
+  schedule: "0 9 * * 6"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+              command: ["python", "-m", "app.jobs", "weekly"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: monthly-dc-report-cronjob
+  namespace: apps
+spec:
+  schedule: "0 9 1 * *"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+              command: ["python", "-m", "app.jobs", "monthly-dc"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data

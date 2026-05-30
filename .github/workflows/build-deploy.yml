@@ -1,0 +1,91 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "deploy/k8s/*.yaml"
+
+permissions:
+  contents: write
+
+env:
+  IMAGE: 192.168.55.148:5000/milksiru/marketflow-retireops
+  DEPLOY_DIR: deploy/k8s
+
+jobs:
+  build:
+    runs-on:
+      - self-hosted
+      - workstation
+      - k8s
+      - marketflow-retireops
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate internal base images
+        shell: bash
+        run: |
+          set -euo pipefail
+          bad=0
+          while IFS= read -r image; do
+            case "${image}" in
+              192.168.55.148:5000/*|scratch) ;;
+              *)
+                echo "::error file=Dockerfile::External base image is not allowed: ${image}. Mirror it to 192.168.55.148:5000 first."
+                bad=1
+                ;;
+            esac
+          done < <(awk 'tolower($1) == "from" { print $2 }' Dockerfile | sed 's/@.*//')
+          exit "${bad}"
+
+      - name: Build image
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_SHA::12}"
+          podman build -t "${IMAGE}:${TAG}" .
+          podman push --tls-verify=false "${IMAGE}:${TAG}"
+          echo "IMAGE_TAG=${IMAGE}:${TAG}" >> "${GITHUB_ENV}"
+
+      - name: Update Kubernetes manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          root = Path(os.environ["DEPLOY_DIR"])
+          image = os.environ["IMAGE_TAG"]
+          changed_files = []
+          for path in sorted(root.glob("*.yaml")):
+              lines = path.read_text().splitlines()
+              out = []
+              changed = False
+              for line in lines:
+                  if line.strip().startswith("image:") and "marketflow-retireops:" in line:
+                      indent = line[:len(line) - len(line.lstrip())]
+                      out.append(f"{indent}image: {image}")
+                      changed = True
+                  else:
+                      out.append(line)
+              if changed:
+                  path.write_text("\n".join(out) + "\n")
+                  changed_files.append(str(path))
+          if not changed_files:
+              raise SystemExit(f"No marketflow-retireops image fields found in {root}")
+          print("\n".join(changed_files))
+          PY
+
+      - name: Commit deployment tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add "${DEPLOY_DIR}"
+          git diff --cached --quiet && exit 0
+          git commit -m "deploy: ${GITHUB_SHA::12} [skip ci]"
+          git push

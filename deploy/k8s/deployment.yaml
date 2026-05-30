@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketflow-retireops
+  namespace: apps
+  labels:
+    app: marketflow-retireops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: marketflow-retireops
+  template:
+    metadata:
+      labels:
+        app: marketflow-retireops
+    spec:
+      containers:
+        - name: app
+          image: 192.168.55.148:5000/milksiru/marketflow-retireops:bootstrap
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: marketflow-retireops-secrets
+          env:
+            - name: MARKETFLOW_DB
+              value: /data/marketflow.db
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: marketflow-retireops-data
