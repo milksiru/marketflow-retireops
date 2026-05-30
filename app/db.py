@@ -115,6 +115,50 @@ def update_channel(channel, payload):
         )
 
 
+def list_subscriptions():
+    with connect() as conn:
+        rows = conn.execute(
+            "select * from report_subscriptions order by report_type, channel_type, recipient"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def upsert_subscription(payload):
+    report_type = payload.get("report_type", "morning")
+    channel_type = payload.get("channel_type", "sms")
+    recipient = payload.get("recipient", "scheduled-recipient")
+    enabled = int(bool(payload.get("enabled", True)))
+    send_time = payload.get("send_time", "07:30")
+    timezone_name = payload.get("timezone", "Asia/Seoul")
+    with connect() as conn:
+        existing = conn.execute(
+            """
+            select id from report_subscriptions
+            where report_type = ? and channel_type = ? and recipient = ?
+            """,
+            (report_type, channel_type, recipient),
+        ).fetchone()
+        if existing:
+            conn.execute(
+                """
+                update report_subscriptions
+                set enabled = ?, send_time = ?, timezone = ?, updated_at = ?
+                where id = ?
+                """,
+                (enabled, send_time, timezone_name, now_iso(), existing["id"]),
+            )
+            return existing["id"]
+        cursor = conn.execute(
+            """
+            insert into report_subscriptions
+              (report_type, channel_type, recipient, enabled, send_time, timezone, created_at, updated_at)
+            values (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (report_type, channel_type, recipient, enabled, send_time, timezone_name, now_iso(), now_iso()),
+        )
+        return cursor.lastrowid
+
+
 def log_notification(channel, report_type, recipient, title, message, status, error_message=None):
     with connect() as conn:
         conn.execute(
@@ -143,3 +187,23 @@ def list_logs(limit=100):
             "select * from notification_logs order by id desc limit ?", (limit,)
         ).fetchall()
         return [dict(row) for row in rows]
+
+
+def notification_stats():
+    with connect() as conn:
+        total = conn.execute("select count(*) as value from notification_logs").fetchone()["value"]
+        sent = conn.execute("select count(*) as value from notification_logs where status = 'sent'").fetchone()["value"]
+        failed = conn.execute("select count(*) as value from notification_logs where status = 'failed'").fetchone()["value"]
+        active_channels = conn.execute(
+            "select count(*) as value from notification_channels where enabled = 1"
+        ).fetchone()["value"]
+        subscriptions = conn.execute(
+            "select count(*) as value from report_subscriptions where enabled = 1"
+        ).fetchone()["value"]
+        return {
+            "total": total,
+            "sent": sent,
+            "failed": failed,
+            "active_channels": active_channels,
+            "active_subscriptions": subscriptions,
+        }

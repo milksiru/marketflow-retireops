@@ -1,81 +1,166 @@
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+try:
+    KST = ZoneInfo("Asia/Seoul")
+except ZoneInfoNotFoundError:
+    KST = timezone(timedelta(hours=9), "Asia/Seoul")
 
 
 REPORTS = {
     "morning": {
         "title": "Morning Brief",
+        "label": "오전 브리프",
+        "send_time": "07:30",
+        "summary": "미국장 마감과 오늘 한국장 체크포인트를 5줄로 정리합니다.",
         "bullets": [
-            "US market close was constructive with technology leadership.",
-            "Watch USD/KRW and US 10Y before adding risk.",
-            "DC 참고: 신규 납입금은 과열 섹터보다 분산 비중을 우선 점검하세요.",
+            "미국 기술주는 강세였고 반도체가 흐름을 이끌었습니다.",
+            "달러/원과 미국 10년 금리가 장 초반 방향을 정할 가능성이 큽니다.",
+            "VIX는 낮지만 이벤트 전에는 변동성 확대를 염두에 두세요.",
+            "관심 ETF는 SOXX, QQQ, TLT 순서로 신호를 확인하세요.",
+            "DC 참고: 신규 납입금은 과열 섹터보다 배당/채권 비중 보정 후보를 먼저 점검하세요.",
         ],
     },
     "market-open": {
         "title": "Market Open Watch",
+        "label": "개장 전 체크",
+        "send_time": "08:50",
+        "summary": "환율, 선물, 전일 미국 지수, 반도체 흐름을 개장 전에 확인합니다.",
         "bullets": [
-            "Pre-open mood is Neutral to Risk On.",
-            "Semiconductor strength is supportive, but volatility remains elevated.",
-            "Check FX and futures before market open.",
+            "개장 전 분위기는 Neutral에서 Risk On 사이입니다.",
+            "미국 선물과 원화 흐름이 동시에 안정되면 성장주에 우호적입니다.",
+            "반도체는 강하지만 단기 과열 구간에서는 분할 접근이 낫습니다.",
+            "시장 초반 30분은 추격보다 확인이 우선입니다.",
+            "DC 참고: 오늘 신호는 비중 확대보다 리밸런싱 확인에 가깝습니다.",
         ],
     },
     "evening": {
         "title": "Evening Brief",
+        "label": "마감 브리프",
+        "send_time": "18:30",
+        "summary": "한국장 마감, 관심 종목/ETF 변화, 위험 알림을 정리합니다.",
         "bullets": [
-            "Korea market close requires sector confirmation.",
-            "Watchlist ETF moves are summarized for next-session planning.",
-            "Risk alert: avoid interpreting short-term strength as guaranteed return.",
+            "한국장은 대형 기술주 중심으로 견조했지만 업종 확산은 제한적이었습니다.",
+            "관심 ETF 중 SOXX는 강세 유지, TLT는 금리 민감 구간입니다.",
+            "짧은 반등을 수익 보장으로 해석하지 마세요.",
+            "내일은 환율과 외국인 수급을 먼저 확인하세요.",
+            "DC 참고: 목표 비중 이탈 여부를 확인하고 신규 납입금 배분을 조정하세요.",
         ],
     },
     "weekly": {
         "title": "Weekly Report",
+        "label": "주간 리포트",
+        "send_time": "토요일 09:00",
+        "summary": "주간 수익률, 강세/약세 섹터, 다음 주 관찰 포인트를 제공합니다.",
         "bullets": [
-            "Review weekly winners and weak sectors.",
-            "Prepare next-week watch points.",
-            "DC 리밸런싱 참고: 목표 비중 이탈 여부를 점검하세요.",
+            "이번 주 강세 섹터는 반도체와 소프트웨어입니다.",
+            "약세 섹터는 금리 민감도가 높은 채권형 자산입니다.",
+            "다음 주에는 FOMC 발언, 고용 지표, 달러 흐름을 확인하세요.",
+            "관심 종목은 확신보다 관찰 후보로 분리해 관리하세요.",
+            "DC 참고: 목표 비중 대비 주식 비중이 높다면 신규 납입금은 안정 자산 보정 후보입니다.",
         ],
     },
     "monthly-dc": {
         "title": "Monthly DC Report",
+        "label": "월간 DC 리포트",
+        "send_time": "매월 1일 09:00",
+        "summary": "월간 자산 흐름, 목표 비중 이탈, 신규 납입금 배분 참고를 정리합니다.",
         "bullets": [
-            "Review monthly asset flow and target allocation drift.",
-            "Plan new contribution allocation.",
-            "Risk score changed: confirm before increasing equity exposure.",
+            "월간 자산 흐름은 성장 자산 우위, 방어 자산 보합입니다.",
+            "목표 비중에서 주식형 자산이 4.2%p 높아졌습니다.",
+            "신규 납입금은 채권/배당형 보정 배분을 우선 검토하세요.",
+            "위험 점수는 전월보다 소폭 상승했습니다.",
+            "이 리포트는 투자 조언이 아니라 운용 참고 신호입니다.",
         ],
     },
 }
 
 
+def _now():
+    return datetime.now(KST)
+
+
 def market_snapshot():
     return {
-        "mood": "Risk On",
+        "as_of": _now().isoformat(),
+        "mood": {
+            "state": "Risk On",
+            "score": 74,
+            "plain": "위험자산 선호가 우세하지만 환율과 금리는 계속 확인해야 합니다.",
+            "drivers": ["미국 기술주 강세", "반도체 수급 개선", "달러 강세 부담"],
+        },
         "badges": ["Risk On", "Dollar Strong", "Volatility Watch"],
         "indices": [
-            {"symbol": "S&P500", "value": "+1.2%"},
-            {"symbol": "Nasdaq", "value": "+1.6%"},
-            {"symbol": "KOSPI", "value": "+0.4%"},
-            {"symbol": "USD/KRW", "value": "1,360"},
-            {"symbol": "US10Y", "value": "4.32%"},
-            {"symbol": "VIX", "value": "15.8"},
+            {"symbol": "S&P500", "name": "미국 대형주", "value": "5,304", "change": "+1.2%", "tone": "up"},
+            {"symbol": "Nasdaq", "name": "미국 기술주", "value": "16,920", "change": "+1.6%", "tone": "up"},
+            {"symbol": "KOSPI", "name": "한국 종합", "value": "2,724", "change": "+0.4%", "tone": "up"},
+            {"symbol": "USD/KRW", "name": "달러/원", "value": "1,360", "change": "+0.3%", "tone": "warn"},
+            {"symbol": "US10Y", "name": "미국 10년", "value": "4.32%", "change": "+4bp", "tone": "warn"},
+            {"symbol": "VIX", "name": "변동성", "value": "15.8", "change": "-0.7", "tone": "down"},
+        ],
+        "brief": [
+            "오늘 시장은 기술주 중심의 Risk On 흐름입니다.",
+            "달러 강세와 금리 상승은 추격 매수보다 확인을 요구합니다.",
+            "반도체는 강하지만 단기 과열 신호를 함께 봐야 합니다.",
+            "채권형 자산은 금리 민감도가 높아 분할 접근이 유리합니다.",
+            "DC 운용은 신규 납입금으로 목표 비중을 보정하는 쪽이 자연스럽습니다.",
         ],
         "watchlist": [
-            {"symbol": "SOXX", "signal": "Strong, but overheated"},
-            {"symbol": "QQQ", "signal": "Trend positive"},
-            {"symbol": "TLT", "signal": "Rate-sensitive watch"},
+            {"symbol": "SOXX", "name": "반도체 ETF", "signal": "강세 유지", "risk": "단기 과열", "score": 82},
+            {"symbol": "QQQ", "name": "나스닥 100", "signal": "상승 추세", "risk": "금리 민감", "score": 76},
+            {"symbol": "TLT", "name": "장기채 ETF", "signal": "관찰", "risk": "금리 상승", "score": 48},
+            {"symbol": "SCHD", "name": "배당 ETF", "signal": "방어 후보", "risk": "상승 탄력 제한", "score": 63},
+        ],
+        "sectors": [
+            {"name": "Semiconductor", "change": "+2.1%", "tone": "up"},
+            {"name": "Software", "change": "+1.4%", "tone": "up"},
+            {"name": "Bank", "change": "+0.3%", "tone": "flat"},
+            {"name": "Battery", "change": "-0.6%", "tone": "down"},
+            {"name": "Bond", "change": "-0.8%", "tone": "down"},
         ],
         "dc": {
-            "style": "Balanced accumulation",
-            "rebalance": "Check equity overweight before new contributions",
-            "plain_language": "금리가 빠르게 오르면 성장주에는 부담이 될 수 있습니다.",
+            "style": "균형 적립형",
+            "risk_score": 62,
+            "rebalance": "주식형 비중이 목표보다 높아 신규 납입금은 배당/채권형 보정 후보입니다.",
+            "allocation": [
+                {"label": "주식형", "target": 55, "current": 59},
+                {"label": "채권형", "target": 30, "current": 27},
+                {"label": "배당/현금성", "target": 15, "current": 14},
+            ],
+            "plain_language": "금리가 빠르게 오르면 성장주에는 부담이 될 수 있습니다. 새 납입금은 과열 구간을 따라가기보다 부족한 비중을 채우는 방식이 안정적입니다.",
         },
+        "alerts": [
+            {"level": "watch", "title": "Dollar Strong", "message": "달러/원 상승은 외국인 수급에 부담이 될 수 있습니다."},
+            {"level": "info", "title": "Rebalance Needed", "message": "주식형 비중이 목표보다 4%p 높습니다."},
+            {"level": "watch", "title": "Volatility Watch", "message": "중요 지표 발표 전 변동성 확대 가능성이 있습니다."},
+        ],
     }
 
 
 def build_report(report_type):
-    report = REPORTS.get(report_type, REPORTS["morning"]).copy()
-    now = datetime.now(ZoneInfo("Asia/Seoul"))
+    source = REPORTS.get(report_type, REPORTS["morning"])
+    report = dict(source)
     report["report_type"] = report_type
-    report["generated_at"] = now.isoformat()
+    report["generated_at"] = _now().isoformat()
     report["snapshot"] = market_snapshot()
     report["message"] = "\n".join(f"- {item}" for item in report["bullets"])
+    report["sms_preview"] = (
+        "[MarketFlow]\n"
+        "오늘 시장: Risk On\n"
+        "Nasdaq +1.6%, SOXX +2.1%, USD/KRW 1,360\n"
+        "DC 참고: 성장 ETF 흐름은 양호하지만 반도체 과열은 주의"
+    )
+    report["kakao_preview"] = {
+        "title": "오늘의 글로벌 시장 브리프",
+        "summary": report["bullets"][:5],
+        "buttons": ["대시보드 열기", "리밸런싱 보기", "위험 알림 보기"],
+    }
     return report
+
+
+def list_reports():
+    return [
+        {"report_type": key, "title": value["title"], "label": value["label"], "send_time": value["send_time"], "summary": value["summary"]}
+        for key, value in REPORTS.items()
+    ]
