@@ -4,6 +4,8 @@ MarketFlow RetireOps is a market briefing and DC retirement-plan reference servi
 
 It is wired for the workstation Kubernetes delivery flow:
 
+Pushes to `main` are built by the workstation self-hosted runner and deployed through Argo CD.
+
 ```text
 push to main
 -> GitHub Actions self-hosted runner on workstation
