@@ -104,6 +104,11 @@ class Handler(BaseHTTPRequestHandler):
     nav button.active, nav button:hover { background: var(--panel2); color: var(--text); }
     main { padding: 24px 28px 88px; max-width: 1400px; width: 100%; }
     header { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 18px; }
+    .header-actions { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .clock { min-width: 210px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 10px 12px; }
+    .clock-date { color: var(--muted); font-size: 12px; }
+    .clock-time { font-size: 24px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .clock-meta { color: var(--blue); font-size: 12px; margin-top: 4px; }
     h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
     h2 { margin: 0 0 12px; font-size: 18px; }
     h3 { margin: 0 0 6px; font-size: 15px; }
@@ -146,6 +151,8 @@ class Handler(BaseHTTPRequestHandler):
       aside { display: none; }
       main { padding: 18px 14px 78px; }
       header { display: block; }
+      .header-actions { justify-content: stretch; margin-top: 12px; }
+      .clock { width: 100%; }
       .top, .two, .cards, .channels { grid-template-columns: 1fr; }
       .ticker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .mood { grid-template-columns: 1fr; }
@@ -165,7 +172,14 @@ class Handler(BaseHTTPRequestHandler):
           <h1>오늘의 시장 흐름</h1>
           <p class="muted">시장 상태, 관심 ETF, DC 운용 참고, 알림 발송 상태를 한 번에 확인합니다.</p>
         </div>
-        <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
+        <div class="header-actions">
+          <div class="clock">
+            <div class="clock-date" id="clockDate">KST</div>
+            <div class="clock-time" id="clockTime">--:--:--</div>
+            <div class="clock-meta" id="dataAsOf">데이터 기준 확인 중</div>
+          </div>
+          <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
+        </div>
       </header>
       <section id="dashboard" class="active">
         <div class="grid top">
@@ -208,6 +222,18 @@ class Handler(BaseHTTPRequestHandler):
   <script>
     const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"]];
     const toneClass = t => t === "up" ? "up" : t === "down" ? "down" : t === "warn" ? "warn" : "flat";
+    function formatKst(value, options) {
+      return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
+    }
+    function tickClock() {
+      const now = new Date();
+      document.getElementById("clockDate").textContent = formatKst(now, { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+      document.getElementById("clockTime").textContent = formatKst(now, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+    }
+    function setDataAsOf(value) {
+      const asOf = value ? new Date(value) : new Date();
+      document.getElementById("dataAsOf").textContent = `데이터 기준 ${formatKst(asOf, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`;
+    }
     function nav(target) {
       document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === target));
       document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("active", b.dataset.nav === target));
@@ -220,6 +246,7 @@ class Handler(BaseHTTPRequestHandler):
     }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
+      setDataAsOf(data.as_of);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="up">check</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span>${i + 1}. ${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = data.indices.map(i => `<div class="tile"><h3>${i.symbol}</h3><p class="muted">${i.name}</p><div class="value">${i.value}</div><b class="${toneClass(i.tone)}">${i.change}</b></div>`).join("");
@@ -255,7 +282,7 @@ class Handler(BaseHTTPRequestHandler):
       await fetch("/api/subscriptions", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({report_type:subReport.value, channel_type:subChannel.value, recipient:subRecipient.value, send_time:subTime.value})});
       await loadSubscriptions();
     }
-    renderNav(); loadDashboard(); loadReports(); loadNotifications(); loadSubscriptions();
+    renderNav(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); loadReports(); loadNotifications(); loadSubscriptions();
   </script>
 </body>
 </html>"""
