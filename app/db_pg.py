@@ -41,8 +41,17 @@ def connect():
         conn.close()
 
 
+@contextmanager
+def cursor(conn):
+    cur = conn.cursor()
+    try:
+        yield cur
+    finally:
+        cur.close()
+
+
 def init(conn):
-    with conn.cursor() as cur:
+    with cursor(conn) as cur:
         cur.execute("create extension if not exists timescaledb")
         cur.execute(
             """
@@ -181,7 +190,7 @@ def init(conn):
 
 def seed_channels(conn):
     channels = [("email", "smtp", False), ("teams", "webhook", False), ("telegram", "bot", False), ("sms", "mock", False), ("kakao", "mock", False)]
-    with conn.cursor() as cur:
+    with cursor(conn) as cur:
         for channel_type, provider, is_enabled in channels:
             cur.execute(
                 """
@@ -195,13 +204,13 @@ def seed_channels(conn):
 
 
 def list_channels():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from notification_channels order by channel_type")
         return _rows(cur)
 
 
 def update_channel(channel, payload):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from notification_channels where channel_type = %s", (channel,))
         existing = _rows(cur)
         if not existing:
@@ -218,13 +227,13 @@ def update_channel(channel, payload):
 
 
 def list_subscriptions():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from report_subscriptions order by report_type, channel_type, recipient")
         return _rows(cur)
 
 
 def upsert_subscription(payload):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             insert into report_subscriptions
@@ -247,7 +256,7 @@ def upsert_subscription(payload):
 
 
 def log_notification(channel, report_type, recipient, title, message, status, error_message=None):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             insert into notification_logs
@@ -259,24 +268,24 @@ def log_notification(channel, report_type, recipient, title, message, status, er
 
 
 def list_logs(limit=100):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from notification_logs order by id desc limit %s", (limit,))
         return _rows(cur)
 
 
 def create_analysis_run(run_type):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("insert into analysis_runs (run_type, status, started_at) values (%s, %s, now()) returning id", (run_type, "running"))
         return cur.fetchone()[0]
 
 
 def finish_analysis_run(run_id, status="succeeded", error_message=None):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("update analysis_runs set status = %s, finished_at = now(), error_message = %s where id = %s", (status, error_message, run_id))
 
 
 def insert_market_prices(rows):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         for row in rows:
             cur.execute(
                 """
@@ -298,7 +307,7 @@ def insert_market_prices(rows):
 
 
 def latest_market_prices():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             select distinct on (asset_id) * from market_prices
@@ -309,7 +318,7 @@ def latest_market_prices():
 
 
 def insert_market_score(score):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             insert into market_scores (time, score_date, market_mood, risk_score, risk_level, summary, created_at)
@@ -320,14 +329,14 @@ def insert_market_score(score):
 
 
 def latest_market_score():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from market_scores order by time desc limit 1")
         rows = _rows(cur)
         return rows[0] if rows else None
 
 
 def insert_asset_signals(signals):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         for row in signals:
             cur.execute(
                 "insert into asset_signals (asset_id, signal_type, score, severity, reason, created_at) values (%s, %s, %s, %s, %s, now())",
@@ -337,13 +346,13 @@ def insert_asset_signals(signals):
 
 
 def latest_asset_signals(limit=50):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from asset_signals order by id desc limit %s", (limit,))
         return _rows(cur)
 
 
 def insert_daily_report(report):
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             insert into daily_reports
@@ -355,14 +364,14 @@ def insert_daily_report(report):
 
 
 def latest_daily_report():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute("select * from daily_reports order by id desc limit 1")
         rows = _rows(cur)
         return rows[0] if rows else None
 
 
 def notification_stats():
-    with connect() as conn, conn.cursor() as cur:
+    with connect() as conn, cursor(conn) as cur:
         cur.execute(
             """
             select
@@ -374,3 +383,4 @@ def notification_stats():
             """
         )
         return _rows(cur)[0]
+
