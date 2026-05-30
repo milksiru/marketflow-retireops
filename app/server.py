@@ -105,10 +105,18 @@ class Handler(BaseHTTPRequestHandler):
     main { padding: 24px 28px 88px; max-width: 1400px; width: 100%; }
     header { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 18px; }
     .header-actions { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-    .clock { min-width: 210px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 10px 12px; }
+    .clock { min-width: 292px; border: 1px solid #1f8fb0; background: linear-gradient(135deg, #0b1522, #0f2634); border-radius: 8px; padding: 10px 12px; box-shadow: inset 0 0 0 1px rgba(56,189,248,.08); }
+    .clock-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .clock-date { color: var(--muted); font-size: 12px; }
-    .clock-time { font-size: 24px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .live { display: inline-flex; align-items: center; gap: 5px; color: var(--up); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+    .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 12px var(--up); }
+    .clock-time { font-size: 30px; font-weight: 850; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
     .clock-meta { color: var(--blue); font-size: 12px; margin-top: 4px; }
+    .sessions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 9px; }
+    .session { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 6px; min-height: 50px; }
+    .session b { display: block; font-size: 11px; }
+    .session span { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); }
+    .session.open { border-color: rgba(74,222,128,.45); }
     h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
     h2 { margin: 0 0 12px; font-size: 18px; }
     h3 { margin: 0 0 6px; font-size: 15px; }
@@ -123,8 +131,17 @@ class Handler(BaseHTTPRequestHandler):
     .score { width: 118px; height: 118px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--blue) 0 74%, #243044 74%); }
     .score b { display: grid; place-items: center; width: 86px; height: 86px; border-radius: 50%; background: var(--panel); font-size: 25px; }
     .badge { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 9px; border-radius: 999px; background: #203047; color: #dbeafe; font-size: 12px; margin: 5px 5px 0 0; }
-    .ticker { display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr)); gap: 10px; }
+    .ticker { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 10px; }
     .tile { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 12px; min-height: 92px; }
+    .market-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 10px; }
+    .market-tile { background: #0d1522; border: 1px solid var(--line); border-radius: 7px; padding: 12px; min-height: 142px; overflow: hidden; }
+    .market-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+    .market-symbol { font-size: 17px; font-weight: 850; }
+    .price { font-size: 24px; font-weight: 850; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .spark { width: 100%; height: 42px; margin-top: 10px; }
+    .mini-meta { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--muted); }
+    .index-strip { display: grid; grid-template-columns: repeat(8, minmax(130px, 1fr)); gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+    .index-chip { min-height: 86px; background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 10px; }
     .value { font-size: 20px; font-weight: 750; margin: 4px 0; }
     .up { color: var(--up); } .down { color: var(--down); } .warn { color: var(--warn); } .flat { color: var(--muted); }
     .list { display: grid; gap: 10px; }
@@ -154,7 +171,8 @@ class Handler(BaseHTTPRequestHandler):
       .header-actions { justify-content: stretch; margin-top: 12px; }
       .clock { width: 100%; }
       .top, .two, .cards, .channels { grid-template-columns: 1fr; }
-      .ticker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ticker, .market-grid { grid-template-columns: 1fr; }
+      .index-strip { grid-template-columns: repeat(8, minmax(132px, 1fr)); }
       .mood { grid-template-columns: 1fr; }
       .mobilebar { display: grid; }
     }
@@ -174,9 +192,10 @@ class Handler(BaseHTTPRequestHandler):
         </div>
         <div class="header-actions">
           <div class="clock">
-            <div class="clock-date" id="clockDate">KST</div>
+            <div class="clock-top"><div class="clock-date" id="clockDate">KST</div><div class="live">LIVE</div></div>
             <div class="clock-time" id="clockTime">--:--:--</div>
             <div class="clock-meta" id="dataAsOf">데이터 기준 확인 중</div>
+            <div class="sessions" id="sessions"></div>
           </div>
           <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
         </div>
@@ -186,7 +205,8 @@ class Handler(BaseHTTPRequestHandler):
           <div class="card"><h2>Market Mood</h2><div id="mood" class="mood"></div></div>
           <div class="card"><h2>Today Brief</h2><div id="brief" class="list"></div></div>
         </div>
-        <div class="card" style="margin-top:14px"><h2>Global Index</h2><div id="indices" class="ticker"></div></div>
+        <div class="card" style="margin-top:14px"><h2>World Market Strip</h2><div id="indices" class="index-strip"></div></div>
+        <div class="card" style="margin-top:14px"><h2>Trade Monitor</h2><div id="tradeBoard" class="market-grid"></div></div>
         <div class="grid two" style="margin-top:14px">
           <div class="card"><h2>My Watchlist</h2><div id="watchlist" class="list"></div></div>
           <div class="card"><h2>DC Retirement</h2><div id="dc"></div></div>
@@ -225,10 +245,34 @@ class Handler(BaseHTTPRequestHandler):
     function formatKst(value, options) {
       return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
     }
+    function minutesInZone(zone) {
+      const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+      const hour = Number(parts.find(p => p.type === "hour").value);
+      const minute = Number(parts.find(p => p.type === "minute").value);
+      return hour * 60 + minute;
+    }
+    function sessionState(name, zone, open, close) {
+      const now = minutesInZone(zone);
+      const active = now >= open && now < close;
+      const left = active ? close - now : (now < open ? open - now : 1440 - now + open);
+      const h = Math.floor(left / 60);
+      const m = left % 60;
+      return { name, active, label: active ? `OPEN ${h}h ${m}m left` : `CLOSED ${h}h ${m}m` };
+    }
+    function renderSessions() {
+      const sessions = [
+        sessionState("KR", "Asia/Seoul", 9 * 60, 15 * 60 + 30),
+        sessionState("JP", "Asia/Tokyo", 9 * 60, 15 * 60),
+        sessionState("LDN", "Europe/London", 8 * 60, 16 * 60 + 30),
+        sessionState("NY", "America/New_York", 9 * 60 + 30, 16 * 60),
+      ];
+      document.getElementById("sessions").innerHTML = sessions.map(s => `<div class="session ${s.active ? "open" : ""}"><b>${s.name}</b><span>${s.label}</span></div>`).join("");
+    }
     function tickClock() {
       const now = new Date();
       document.getElementById("clockDate").textContent = formatKst(now, { year: "numeric", month: "long", day: "numeric", weekday: "long" });
       document.getElementById("clockTime").textContent = formatKst(now, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+      renderSessions();
     }
     function setDataAsOf(value) {
       const asOf = value ? new Date(value) : new Date();
@@ -244,13 +288,26 @@ class Handler(BaseHTTPRequestHandler):
       }
       document.querySelectorAll('[data-nav="dashboard"]').forEach(b => b.classList.add("active"));
     }
+    function spark(points, tone) {
+      const max = Math.max(...points);
+      const min = Math.min(...points);
+      const range = Math.max(1, max - min);
+      const coords = points.map((p, idx) => {
+        const x = idx * (100 / (points.length - 1));
+        const y = 38 - ((p - min) / range) * 32;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(" ");
+      const color = tone === "down" ? "#fb7185" : tone === "warn" ? "#fbbf24" : tone === "flat" ? "#9ba8bb" : "#4ade80";
+      return `<svg class="spark" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true"><polyline points="${coords}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="0" y1="39" x2="100" y2="39" stroke="#263346" stroke-width="1"/></svg>`;
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="up">check</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span>${i + 1}. ${b}</span></div>`).join("");
-      document.getElementById("indices").innerHTML = data.indices.map(i => `<div class="tile"><h3>${i.symbol}</h3><p class="muted">${i.name}</p><div class="value">${i.value}</div><b class="${toneClass(i.tone)}">${i.change}</b></div>`).join("");
-      document.getElementById("watchlist").innerHTML = data.watchlist.map(w => `<div><div class="row"><span><b>${w.symbol}</b> <span class="muted">${w.name}</span><br><span>${w.signal}</span></span><span class="warn">${w.risk}</span></div><div class="bar"><span style="width:${w.score}%"></span></div></div>`).join("");
+      document.getElementById("indices").innerHTML = data.indices.map(i => `<div class="index-chip"><div class="market-head"><div><h3>${i.symbol}</h3><p class="muted">${i.name}</p></div><b class="${toneClass(i.tone)}">${i.change}</b></div><div class="value">${i.value}</div><div class="mini-meta"><span>${i.session}</span><span>${i.volume}</span></div></div>`).join("");
+      document.getElementById("tradeBoard").innerHTML = data.trade_board.map(t => `<div class="market-tile"><div class="market-head"><div><div class="market-symbol">${t.symbol}</div><p class="muted">${t.name}</p></div><b class="${toneClass(t.tone)}">${t.change}</b></div><div class="price">${t.price}</div>${spark(t.spark, t.tone)}<div class="mini-meta"><span>${t.signal}</span><span>${t.tone.toUpperCase()}</span></div></div>`).join("");
+      document.getElementById("watchlist").innerHTML = data.watchlist.map(w => `<div><div class="row"><span><b>${w.symbol}</b> <span class="muted">${w.name}</span><br><span>${w.signal}</span></span><span class="${w.change && w.change.startsWith('-') ? 'down' : 'up'}">${w.change || ''}</span></div><div class="mini-meta"><span>${w.risk}</span><span>Signal ${w.score}</span></div><div class="bar"><span style="width:${w.score}%"></span></div></div>`).join("");
       document.getElementById("dc").innerHTML = `<h3>${data.dc.style}</h3><p class="muted">${data.dc.plain_language}</p><div class="list" style="margin-top:12px">${data.dc.allocation.map(a => `<div><div class="row"><span>${a.label}</span><span>현재 ${a.current}% / 목표 ${a.target}%</span></div><div class="bar"><span style="width:${a.current}%"></span></div></div>`).join("")}</div><p class="badge">Risk Score ${data.dc.risk_score}</p><p class="muted" style="margin-top:10px">${data.dc.rebalance}</p>`;
       document.getElementById("sectors").innerHTML = data.sectors.map(s => `<div><b>${s.name}</b><p class="${toneClass(s.tone)}">${s.change}</p></div>`).join("");
       document.getElementById("alerts").innerHTML = data.alerts.map(a => `<div class="row"><span><b>${a.title}</b><br><span class="muted">${a.message}</span></span><span class="badge">${a.level}</span></div>`).join("");
