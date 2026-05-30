@@ -4,7 +4,16 @@ from urllib.parse import urlparse
 
 from app import db
 from app.notifications import send_notification
+from app.pipeline import (
+    collect_market_data,
+    generate_daily_report,
+    latest_analysis,
+    run_analysis,
+    send_daily_report_sms,
+    send_risk_alert_sms,
+)
 from app.reports import build_report, list_reports, market_snapshot
+from app.sms import send_sms
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -35,9 +44,19 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(market_snapshot())
         if path == "/api/reports":
             return self._json({"reports": list_reports()})
+        if path == "/api/analyze/latest":
+            return self._json(latest_analysis())
+        if path == "/api/market-score/latest":
+            return self._json({"market_score": db.latest_market_score()})
+        if path == "/api/signals/latest":
+            return self._json({"signals": db.latest_asset_signals()})
+        if path == "/api/reports/daily/latest":
+            return self._json({"daily_report": db.latest_daily_report()})
         if path.startswith("/api/reports/"):
             return self._json(build_report(path.rsplit("/", 1)[-1]))
         if path == "/api/notifications":
+            return self._json({"logs": db.list_logs()})
+        if path == "/api/notifications/logs":
             return self._json({"logs": db.list_logs()})
         if path == "/api/notifications/stats":
             return self._json(db.notification_stats())
@@ -55,6 +74,28 @@ class Handler(BaseHTTPRequestHandler):
             recipient = payload.get("recipient", "test-recipient")
             report_type = payload.get("report_type", "morning")
             return self._json(send_notification(channel, recipient, report_type))
+        if path == "/api/analyze/run":
+            provider = payload.get("provider", "mock")
+            collected = collect_market_data(provider)
+            analyzed = run_analysis()
+            report = generate_daily_report()
+            return self._json({"collector": collected, "analysis": analyzed, "report": report})
+        if path == "/api/reports/daily/send-sms":
+            return self._json(send_daily_report_sms())
+        if path == "/api/notifications/sms/test":
+            recipient = payload.get("recipient")
+            return self._json(send_sms("MarketFlow SMS Test", "문자 알림은 투자 참고 정보를 전달합니다. 자동 매수/매도 기능은 제공하지 않습니다.", recipient, "sms-test"))
+        if path == "/api/notifications/sms/send":
+            return self._json(
+                send_sms(
+                    payload.get("title", "MarketFlow"),
+                    payload.get("message", "MarketFlow notification"),
+                    payload.get("recipient"),
+                    payload.get("report_type", "manual"),
+                )
+            )
+        if path == "/api/notifications/sms/risk-alert":
+            return self._json(send_risk_alert_sms())
         if path == "/api/notifications/send":
             return self._json(
                 send_notification(
@@ -237,6 +278,15 @@ class Handler(BaseHTTPRequestHandler):
           <p style="margin-top:12px"><button class="primary" onclick="saveSubscription()">구독 저장</button></p>
           <div id="subscriptions" class="list" style="margin-top:12px"></div>
         </div>
+        <div class="card" style="margin-top:14px"><h2>SMS Notification</h2>
+          <p class="muted">문자 알림은 투자 참고 정보를 전달합니다. 자동 매수/매도 기능은 제공하지 않습니다.</p>
+          <p class="muted">SMS Provider 설정 전에는 Mock 모드로만 동작합니다.</p>
+          <div class="grid two" style="margin-top:12px">
+            <select id="smsProvider"><option value="mock">mock</option><option value="solapi">solapi</option><option value="sens">sens</option></select>
+            <input id="smsRecipient" placeholder="01012345678" value="01000000000">
+          </div>
+          <p style="margin-top:12px"><button class="primary" onclick="sendSmsTest()">테스트 문자 발송</button></p>
+        </div>
       </section>
     </main>
   </div>
@@ -341,6 +391,11 @@ class Handler(BaseHTTPRequestHandler):
     async function saveSubscription() {
       await fetch("/api/subscriptions", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({report_type:subReport.value, channel_type:subChannel.value, recipient:subRecipient.value, send_time:subTime.value})});
       await loadSubscriptions();
+    }
+    async function sendSmsTest() {
+      await fetch("/api/notifications/sms/test", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({recipient:smsRecipient.value, provider:smsProvider.value})});
+      await loadNotifications();
+      nav("notifications");
     }
     renderNav(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports(); loadNotifications(); loadSubscriptions();
   </script>

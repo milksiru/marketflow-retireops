@@ -62,9 +62,71 @@ def init(conn):
           created_at text not null,
           updated_at text not null
         );
+
+        create table if not exists market_prices (
+          id integer primary key autoincrement,
+          asset_id text not null,
+          asset_name text not null,
+          price real,
+          change_percent real,
+          volume real,
+          source text not null,
+          observed_at text not null,
+          created_at text not null
+        );
+
+        create table if not exists analysis_runs (
+          id integer primary key autoincrement,
+          run_type text not null,
+          status text not null,
+          started_at text not null,
+          finished_at text,
+          error_message text
+        );
+
+        create table if not exists market_scores (
+          id integer primary key autoincrement,
+          score_date text not null,
+          market_mood text not null,
+          risk_score integer not null,
+          risk_level text not null,
+          summary text not null,
+          created_at text not null
+        );
+
+        create table if not exists asset_signals (
+          id integer primary key autoincrement,
+          asset_id text not null,
+          signal_type text not null,
+          score integer not null,
+          severity text not null,
+          reason text not null,
+          created_at text not null
+        );
+
+        create table if not exists daily_reports (
+          id integer primary key autoincrement,
+          report_date text not null,
+          title text not null,
+          market_mood text not null,
+          risk_level text not null,
+          summary text not null,
+          dc_comment text not null,
+          content text not null,
+          created_at text not null
+        );
         """
     )
+    ensure_columns(conn, "notification_channels", {"sender": "text", "recipient": "text"})
+    ensure_columns(conn, "notification_logs", {"provider": "text"})
     seed_channels(conn)
+
+
+def ensure_columns(conn, table, columns):
+    existing = {row["name"] for row in conn.execute(f"pragma table_info({table})")}
+    for name, column_type in columns.items():
+        if name not in existing:
+            conn.execute(f"alter table {table} add column {name} {column_type}")
 
 
 def seed_channels(conn):
@@ -179,6 +241,145 @@ def log_notification(channel, report_type, recipient, title, message, status, er
                 now_iso(),
             ),
         )
+
+
+def create_analysis_run(run_type):
+    with connect() as conn:
+        cursor = conn.execute(
+            "insert into analysis_runs (run_type, status, started_at) values (?, ?, ?)",
+            (run_type, "running", now_iso()),
+        )
+        return cursor.lastrowid
+
+
+def finish_analysis_run(run_id, status="succeeded", error_message=None):
+    with connect() as conn:
+        conn.execute(
+            "update analysis_runs set status = ?, finished_at = ?, error_message = ? where id = ?",
+            (status, now_iso(), error_message, run_id),
+        )
+
+
+def insert_market_prices(rows):
+    with connect() as conn:
+        conn.executemany(
+            """
+            insert into market_prices
+              (asset_id, asset_name, price, change_percent, volume, source, observed_at, created_at)
+            values (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    row["asset_id"],
+                    row.get("asset_name", row["asset_id"]),
+                    row.get("price"),
+                    row.get("change_percent"),
+                    row.get("volume"),
+                    row.get("source", "mock"),
+                    row.get("observed_at", now_iso()),
+                    now_iso(),
+                )
+                for row in rows
+            ],
+        )
+        return len(rows)
+
+
+def latest_market_prices():
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            select mp.* from market_prices mp
+            join (
+              select asset_id, max(id) as max_id from market_prices group by asset_id
+            ) latest on latest.max_id = mp.id
+            order by asset_id
+            """
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def insert_market_score(score):
+    with connect() as conn:
+        conn.execute(
+            """
+            insert into market_scores
+              (score_date, market_mood, risk_score, risk_level, summary, created_at)
+            values (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                score["score_date"],
+                score["market_mood"],
+                score["risk_score"],
+                score["risk_level"],
+                score["summary"],
+                now_iso(),
+            ),
+        )
+
+
+def latest_market_score():
+    with connect() as conn:
+        row = conn.execute("select * from market_scores order by id desc limit 1").fetchone()
+        return dict(row) if row else None
+
+
+def insert_asset_signals(signals):
+    with connect() as conn:
+        conn.executemany(
+            """
+            insert into asset_signals
+              (asset_id, signal_type, score, severity, reason, created_at)
+            values (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    row["asset_id"],
+                    row["signal_type"],
+                    row["score"],
+                    row["severity"],
+                    row["reason"],
+                    now_iso(),
+                )
+                for row in signals
+            ],
+        )
+        return len(signals)
+
+
+def latest_asset_signals(limit=50):
+    with connect() as conn:
+        rows = conn.execute(
+            "select * from asset_signals order by id desc limit ?", (limit,)
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def insert_daily_report(report):
+    with connect() as conn:
+        conn.execute(
+            """
+            insert into daily_reports
+              (report_date, title, market_mood, risk_level, summary, dc_comment, content, created_at)
+            values (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                report["report_date"],
+                report["title"],
+                report["market_mood"],
+                report["risk_level"],
+                report["summary"],
+                report["dc_comment"],
+                report["content"],
+                now_iso(),
+            ),
+        )
+
+
+def latest_daily_report():
+    with connect() as conn:
+        row = conn.execute("select * from daily_reports order by id desc limit 1").fetchone()
+        return dict(row) if row else None
 
 
 def list_logs(limit=100):

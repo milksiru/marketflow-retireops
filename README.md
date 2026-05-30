@@ -104,6 +104,65 @@ Market data behavior:
 - The response includes `source`, `cache_status`, `refresh_seconds`, and `as_of`.
 - Exchange/vendor delay may still apply. For direct tick-level data, connect a paid market data feed later.
 
+Analysis pipeline:
+
+- `collector-cronjob`: every 10 minutes, stores market data.
+- `analyzer-cronjob`: every 15 minutes, computes market mood, risk score, and asset signals.
+- `daily-report-cronjob`: 07:30 KST on weekdays, generates the Daily Report.
+- `sms-morning-report-cronjob`: 07:35 KST on weekdays, sends the Daily Report by SMS.
+- `sms-risk-alert-cronjob`: every 15 minutes, sends risk alert SMS through the configured provider.
+- MVP storage uses the existing persistent app database. The repository layer is isolated so it can be migrated to PostgreSQL next.
+
+Run the full MVP flow manually:
+
+```bash
+curl -X POST http://192.168.55.42:31081/api/analyze/run \
+  -H 'Content-Type: application/json' \
+  -d '{"provider":"mock"}'
+```
+
+Analysis APIs:
+
+```text
+POST /api/analyze/run
+GET /api/analyze/latest
+GET /api/market-score/latest
+GET /api/signals/latest
+GET /api/reports/daily/latest
+POST /api/reports/daily/send-sms
+```
+
+SMS behavior:
+
+- Default provider is `mock`; no real SMS is sent.
+- Real sending happens only with `SMS_PROVIDER=solapi` or `SMS_PROVIDER=sens`.
+- Phone numbers are normalized to `01012345678` format.
+- Failures are stored in `notification_logs.error_message`.
+- Solapi can send SMS/LMS/MMS through its API. Set `SOLAPI_API_KEY` and `SOLAPI_API_SECRET`.
+- Naver Cloud SENS uses access key, secret key, and service id. Set `NAVER_SENS_ACCESS_KEY`, `NAVER_SENS_SECRET_KEY`, and `NAVER_SENS_SERVICE_ID`.
+- Real providers may create external SMS charges.
+
+SMS Secret values:
+
+```text
+SMS_PROVIDER=mock
+SMS_SENDER_NUMBER=01000000000
+SMS_RECIPIENT_NUMBER=01000000000
+SOLAPI_API_KEY=replace-me
+SOLAPI_API_SECRET=replace-me
+NAVER_SENS_ACCESS_KEY=replace-me
+NAVER_SENS_SECRET_KEY=replace-me
+NAVER_SENS_SERVICE_ID=replace-me
+```
+
+Test SMS:
+
+```bash
+curl -X POST http://192.168.55.42:31081/api/notifications/sms/test \
+  -H 'Content-Type: application/json' \
+  -d '{"recipient":"01012345678"}'
+```
+
 Check delivery failures:
 
 ```bash
