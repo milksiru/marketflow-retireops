@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from app.marketdata import live_market_snapshot
+
 
 try:
     KST = ZoneInfo("Asia/Seoul")
@@ -82,8 +84,23 @@ def _now():
 
 
 def market_snapshot():
+    live = live_market_snapshot()
+    if live:
+        fallback = _fallback_market_snapshot()
+        live["brief"] = fallback["brief"]
+        live["watchlist"] = _watchlist_from_trade_board(live["trade_board"])
+        live["sectors"] = _sectors_from_trade_board(live["trade_board"])
+        live["dc"] = fallback["dc"]
+        live["alerts"] = _alerts_from_live(live)
+        return live
+    return _fallback_market_snapshot()
+
+
+def _fallback_market_snapshot():
     return {
         "as_of": _now().isoformat(),
+        "source": "fallback-sample",
+        "refresh_seconds": 25,
         "mood": {
             "state": "Risk On",
             "score": 74,
@@ -148,6 +165,69 @@ def market_snapshot():
             {"level": "watch", "title": "Volatility Watch", "message": "중요 지표 발표 전 변동성 확대 가능성이 있습니다."},
         ],
     }
+
+
+def _watchlist_from_trade_board(trade_board):
+    risks = {
+        "SOXX": "단기 과열",
+        "QQQ": "금리 민감",
+        "TLT": "금리 상승",
+        "SCHD": "상승 탄력 제한",
+    }
+    items = []
+    for item in trade_board:
+        if item["symbol"] not in risks:
+            continue
+        change = item["change"]
+        numeric = float(change.replace("%", "")) if change not in {"-", ""} else 0
+        score = max(15, min(95, int(55 + numeric * 8)))
+        items.append(
+            {
+                "symbol": item["symbol"],
+                "name": item["name"],
+                "signal": item["signal"],
+                "risk": risks[item["symbol"]],
+                "score": score,
+                "change": change,
+            }
+        )
+    return items
+
+
+def _sectors_from_trade_board(trade_board):
+    lookup = {item["symbol"]: item for item in trade_board}
+    sector_map = [
+        ("Semiconductor", ["NVDA", "SOXX"]),
+        ("Mega Tech", ["AAPL", "MSFT", "QQQ"]),
+        ("EV", ["TSLA"]),
+        ("Dividend", ["SCHD"]),
+        ("Bond", ["TLT"]),
+    ]
+    sectors = []
+    for name, symbols in sector_map:
+        changes = []
+        for symbol in symbols:
+            change = lookup.get(symbol, {}).get("change", "0%").replace("%", "")
+            try:
+                changes.append(float(change))
+            except ValueError:
+                changes.append(0)
+        avg = sum(changes) / len(changes)
+        tone = "up" if avg >= 0.25 else "down" if avg <= -0.25 else "flat"
+        sectors.append({"name": name, "change": f"{avg:+.2f}%", "tone": tone})
+    return sectors
+
+
+def _alerts_from_live(snapshot):
+    alerts = []
+    mood = snapshot["mood"]["state"]
+    if mood == "Risk Off":
+        alerts.append({"level": "watch", "title": "Risk Off", "message": "관심 종목 하락 비중이 높아 신규 진입보다 위험 관리가 우선입니다."})
+    for item in snapshot["indices"]:
+        if item["symbol"] in {"USD/KRW", "US10Y", "VIX"} and item["tone"] in {"warn", "up"}:
+            alerts.append({"level": "watch", "title": item["symbol"], "message": f"{item['name']} 현재 {item['value']} / {item['change']} 입니다."})
+    alerts.append({"level": "info", "title": "Live Data", "message": f"{snapshot['source']} 기준으로 {snapshot['refresh_seconds']}초 단위 갱신합니다."})
+    return alerts[:3]
 
 
 def build_report(report_type):

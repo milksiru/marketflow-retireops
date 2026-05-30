@@ -20,6 +20,7 @@ push to main
 
 - Dashboard with market mood cards, index strip, watchlist, DC retirement card, and alert preview
 - Mobile-first consumer finance UI with Home, Reports, Notifications, and Settings views
+- Live market polling through the Yahoo Finance chart endpoint with a 25 second backend cache and 30 second dashboard refresh
 - Daily report previews for SMS and Kakao-style button messages
 - Report subscription API for channel, recipient, send time, and timezone management
 - Notification API:
@@ -94,6 +95,14 @@ Monthly DC Report:  0 9 1 * *
 ```
 
 ## Operations
+
+Market data behavior:
+
+- `/api/dashboard` fetches the latest available quote data when the backend cache expires.
+- Backend cache TTL is 25 seconds.
+- The web dashboard refreshes market panels every 30 seconds.
+- The response includes `source`, `cache_status`, `refresh_seconds`, and `as_of`.
+- Exchange/vendor delay may still apply. For direct tick-level data, connect a paid market data feed later.
 
 Check delivery failures:
 

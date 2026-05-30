@@ -112,6 +112,7 @@ class Handler(BaseHTTPRequestHandler):
     .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--up); box-shadow: 0 0 12px var(--up); }
     .clock-time { font-size: 30px; font-weight: 850; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
     .clock-meta { color: var(--blue); font-size: 12px; margin-top: 4px; }
+    .source-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
     .sessions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 9px; }
     .session { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; padding: 6px; min-height: 50px; }
     .session b { display: block; font-size: 11px; }
@@ -195,6 +196,7 @@ class Handler(BaseHTTPRequestHandler):
             <div class="clock-top"><div class="clock-date" id="clockDate">KST</div><div class="live">LIVE</div></div>
             <div class="clock-time" id="clockTime">--:--:--</div>
             <div class="clock-meta" id="dataAsOf">데이터 기준 확인 중</div>
+            <div class="source-meta" id="sourceMeta">실시간 수집 대기</div>
             <div class="sessions" id="sessions"></div>
           </div>
           <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
@@ -274,9 +276,10 @@ class Handler(BaseHTTPRequestHandler):
       document.getElementById("clockTime").textContent = formatKst(now, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
       renderSessions();
     }
-    function setDataAsOf(value) {
+    function setDataAsOf(value, source, cacheStatus, refreshSeconds) {
       const asOf = value ? new Date(value) : new Date();
       document.getElementById("dataAsOf").textContent = `데이터 기준 ${formatKst(asOf, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}`;
+      document.getElementById("sourceMeta").textContent = `${source || "unknown"} / ${cacheStatus || "checking"} / ${refreshSeconds || 30}초 갱신`;
     }
     function nav(target) {
       document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === target));
@@ -302,7 +305,7 @@ class Handler(BaseHTTPRequestHandler):
     }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
-      setDataAsOf(data.as_of);
+      setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="up">check</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span>${i + 1}. ${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = data.indices.map(i => `<div class="index-chip"><div class="market-head"><div><h3>${i.symbol}</h3><p class="muted">${i.name}</p></div><b class="${toneClass(i.tone)}">${i.change}</b></div><div class="value">${i.value}</div><div class="mini-meta"><span>${i.session}</span><span>${i.volume}</span></div></div>`).join("");
@@ -339,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
       await fetch("/api/subscriptions", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({report_type:subReport.value, channel_type:subChannel.value, recipient:subRecipient.value, send_time:subTime.value})});
       await loadSubscriptions();
     }
-    renderNav(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); loadReports(); loadNotifications(); loadSubscriptions();
+    renderNav(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports(); loadNotifications(); loadSubscriptions();
   </script>
 </body>
 </html>"""
