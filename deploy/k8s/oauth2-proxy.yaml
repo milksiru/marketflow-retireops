@@ -17,7 +17,7 @@ type: Opaque
 stringData:
   client-id: "replace-with-google-oauth-client-id"
   client-secret: "replace-with-google-oauth-client-secret"
-  cookie-secret: "replace-with-32-byte-base64-cookie-secret"
+  cookie-secret: "0123456789abcdef0123456789abcdef"
 ---
 apiVersion: apps/v1
 kind: Deployment
