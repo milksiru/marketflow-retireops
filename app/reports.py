@@ -202,66 +202,6 @@ def _family_plan():
         "home_target_low": 600_000_000,
         "home_target_high": 700_000_000,
     }
-
-
-def _month_age(birth_date):
-    today = _now().date()
-    months = (today.year - birth_date.year) * 12 + today.month - birth_date.month
-    if today.day < birth_date.day:
-        months -= 1
-    return months
-
-
-def _taeri_plan():
-    birth = datetime(2022, 11, 11, tzinfo=KST).date()
-    months = _month_age(birth)
-    years = months // 12
-    remain_months = months % 12
-    return {
-        "name": "태리",
-        "birth": "2022-11-11",
-        "age": f"{years}세 {remain_months}개월",
-        "profile": "여아 · 대한민국 · 어린이집 3년차",
-        "summary": "올해는 어린이집 생활 안정, 언어 표현, 친구관계, 기본 생활습관, 4세 무상교육·보육 확대 여부 확인이 핵심입니다.",
-        "checkpoints": [
-            {"title": "어린이집 생활", "body": "등원 거부, 낮잠, 식사, 또래관계, 선생님 피드백을 월 1회 메모해 변화만 봅니다."},
-            {"title": "언어·정서", "body": "문장으로 요구하기, 감정 이름 붙이기, 기다리기·양보하기를 놀이 속에서 반복합니다."},
-            {"title": "건강", "body": "예방접종도우미에서 접종 누락 여부를 확인하고, 계절성 독감 접종 시기도 챙깁니다."},
-            {"title": "기관 전환", "body": "어린이집 유지, 유치원 전환, 방과후 비용 차이를 2027년 전환 전에 비교합니다."},
-        ],
-        "todo": [
-            "어린이집 상담 때 친구관계·식사·낮잠·화장실 적응을 확인합니다.",
-            "예방접종도우미에서 태리 접종 내역과 다음 접종 일정을 확인합니다.",
-            "4~5세 무상교육·보육 지원이 어린이집 필요경비에서 어떻게 차감되는지 기관에 확인합니다.",
-            "긴급 돌봄 대비용으로 아이돌봄서비스 가입 가능 여부와 본인부담금을 미리 확인합니다.",
-        ],
-        "sources": [
-            {
-                "source": "정책브리핑 / 교육부",
-                "title": "2026년부터 유아 무상교육·보육 지원 대상 4~5세 확대",
-                "summary": "2026년 3월부터 4~5세 어린이집·유치원 이용 아동에 대한 추가 비용 지원 확대 내용을 확인했습니다.",
-                "url": "https://m.korea.kr/briefing/pressReleaseView.do?newsId=156746963",
-            },
-            {
-                "source": "찾기쉬운 생활법령정보",
-                "title": "양육수당·보육 지원 기준",
-                "summary": "어린이집, 유치원, 종일제 아이돌봄 이용 여부에 따른 양육수당 지원 조건을 확인했습니다.",
-                "url": "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=3&cciNo=1&cnpClsNo=1&csmSeq=626",
-            },
-            {
-                "source": "질병관리청 예방접종도우미",
-                "title": "어린이 국가예방접종 확인",
-                "summary": "어린이 예방접종 기록과 지정의료기관 확인을 위한 공식 서비스입니다.",
-                "url": "https://nip.kdca.go.kr/",
-            },
-            {
-                "source": "아이돌봄서비스",
-                "title": "만 12세 이하 아이돌봄 지원",
-                "summary": "양육공백이 생길 때 아이돌보미가 방문하는 정부지원 돌봄 서비스를 확인했습니다.",
-                "url": "https://www.idolbom.go.kr/front/srvcGuide",
-            },
-        ],
-    }
     settings = {**defaults, **db.family_plan_settings()}
     cash_stock = settings["cash_stock"]
     wife_cash = settings["park_juyoung_retirement"]
@@ -327,6 +267,64 @@ def _taeri_plan():
     }
 
 
+def _month_age(birth_date):
+    today = _now().date()
+    months = (today.year - birth_date.year) * 12 + today.month - birth_date.month
+    if today.day < birth_date.day:
+        months -= 1
+    return months
+
+
+def _taeri_plan():
+    birth = datetime(2022, 11, 11, tzinfo=KST).date()
+    months = _month_age(birth)
+    years = months // 12
+    remain_months = months % 12
+    return {
+        "name": "태리",
+        "birth": "2022-11-11",
+        "age": f"{years}세 {remain_months}개월",
+        "profile": "여아 · 대한민국 · 어린이집 3년차",
+        "summary": "올해는 어린이집 생활 안정, 언어 표현, 친구관계, 기본 생활습관, 4세 무상교육·보육 확대 여부 확인이 핵심입니다.",
+        "checkpoints": [
+            {"title": "어린이집 생활", "body": "등원 거부, 낮잠, 식사, 또래관계, 선생님 피드백을 월 1회 메모해 변화만 봅니다."},
+            {"title": "언어·정서", "body": "문장으로 요구하기, 감정 이름 붙이기, 기다리기·양보하기를 놀이 속에서 반복합니다."},
+            {"title": "건강", "body": "예방접종도우미에서 접종 누락 여부를 확인하고, 계절성 독감 접종 시기도 챙깁니다."},
+            {"title": "기관 전환", "body": "어린이집 유지, 유치원 전환, 방과후 비용 차이를 2027년 전환 전에 비교합니다."},
+        ],
+        "todo": [
+            "어린이집 상담 때 친구관계·식사·낮잠·화장실 적응을 확인합니다.",
+            "예방접종도우미에서 태리 접종 내역과 다음 접종 일정을 확인합니다.",
+            "4~5세 무상교육·보육 지원이 어린이집 필요경비에서 어떻게 차감되는지 기관에 확인합니다.",
+            "긴급 돌봄 대비용으로 아이돌봄서비스 가입 가능 여부와 본인부담금을 미리 확인합니다.",
+        ],
+        "sources": [
+            {
+                "source": "정책브리핑 / 교육부",
+                "title": "2026년부터 유아 무상교육·보육 지원 대상 4~5세 확대",
+                "summary": "2026년 3월부터 4~5세 어린이집·유치원 이용 아동에 대한 추가 비용 지원 확대 내용을 확인했습니다.",
+                "url": "https://m.korea.kr/briefing/pressReleaseView.do?newsId=156746963",
+            },
+            {
+                "source": "찾기쉬운 생활법령정보",
+                "title": "양육수당·보육 지원 기준",
+                "summary": "어린이집, 유치원, 종일제 아이돌봄 이용 여부에 따른 양육수당 지원 조건을 확인했습니다.",
+                "url": "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=3&cciNo=1&cnpClsNo=1&csmSeq=626",
+            },
+            {
+                "source": "질병관리청 예방접종도우미",
+                "title": "어린이 국가예방접종 확인",
+                "summary": "어린이 예방접종 기록과 지정의료기관 확인을 위한 공식 서비스입니다.",
+                "url": "https://nip.kdca.go.kr/",
+            },
+            {
+                "source": "아이돌봄서비스",
+                "title": "만 12세 이하 아이돌봄 지원",
+                "summary": "양육공백이 생길 때 아이돌보미가 방문하는 정부지원 돌봄 서비스를 확인했습니다.",
+                "url": "https://www.idolbom.go.kr/front/srvcGuide",
+            },
+        ],
+    }
 def _watchlist_from_trade_board(trade_board):
     risks = {
         "SOXX": "단기 과열",
