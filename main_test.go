@@ -64,6 +64,10 @@ func TestFamilyPlanIncludesPresale(t *testing.T) {
 	if metrics := plan["metrics"].([]map[string]any); len(metrics) != 6 {
 		t.Fatalf("family plan must expose six summary metrics, got %d", len(metrics))
 	}
+	goals := plan["goals"].([]map[string]any)
+	if goals[0]["label"] != "주택 준비금" || goals[0]["current_text"] == "" || goals[0]["target_text"] == "" {
+		t.Fatalf("family goals must explain current and target values: %#v", goals[0])
+	}
 }
 
 func TestMemorySubscriptionUpsert(t *testing.T) {
