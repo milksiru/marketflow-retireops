@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from app import db
 from app.marketdata import live_market_snapshot
 
 
@@ -187,23 +188,36 @@ def _money_krw(value):
 
 
 def _family_plan():
-    cash_stock = 25_000_000
-    wife_cash = 15_000_000
-    severance = 25_000_000
-    savings = 600_000
-    car_loan = 100_000_000
-    jeonse_deposit = 250_000_000
-    jeonse_loan = 109_000_000
+    defaults = {
+        "cash_stock": 25_000_000,
+        "park_juyoung_retirement": 15_000_000,
+        "kim_jihun_retirement": 25_000_000,
+        "savings": 600_000,
+        "car_loan": 100_000_000,
+        "jeonse_deposit": 250_000_000,
+        "jeonse_loan": 109_000_000,
+        "monthly_saving": 100_000,
+        "home_target_low": 600_000_000,
+        "home_target_high": 700_000_000,
+    }
+    settings = {**defaults, **db.family_plan_settings()}
+    cash_stock = settings["cash_stock"]
+    wife_cash = settings["park_juyoung_retirement"]
+    severance = settings["kim_jihun_retirement"]
+    savings = settings["savings"]
+    car_loan = settings["car_loan"]
+    jeonse_deposit = settings["jeonse_deposit"]
+    jeonse_loan = settings["jeonse_loan"]
     liquid_assets = cash_stock + wife_cash + severance + savings
     housing_equity = jeonse_deposit - jeonse_loan
     current_net = liquid_assets + housing_equity - car_loan
-    home_target_low = 600_000_000
-    home_target_high = 700_000_000
-    target_mid = 650_000_000
+    home_target_low = settings["home_target_low"]
+    home_target_high = settings["home_target_high"]
+    target_mid = (home_target_low + home_target_high) // 2
     recommended_base_cash = 220_000_000
     available_home_base = liquid_assets + housing_equity
     gap = max(0, recommended_base_cash - available_home_base)
-    monthly_saving = 100_000
+    monthly_saving = settings["monthly_saving"]
     return {
         "title": "우리 가족 플랜",
         "target": "집 매매 6억~7억",
@@ -236,6 +250,18 @@ def _family_plan():
             "4단계: 투자 자산은 매수보다 주택 계약금·취득세·이사비 현금흐름을 우선합니다.",
         ],
         "monthly_saving": _money_krw(monthly_saving),
+        "editable": [
+            {"key": "cash_stock", "label": "현금/주식", "value": cash_stock, "category": "asset"},
+            {"key": "park_juyoung_retirement", "label": "박주영님 퇴직금", "value": wife_cash, "category": "asset"},
+            {"key": "kim_jihun_retirement", "label": "김지훈님 퇴직금", "value": severance, "category": "asset"},
+            {"key": "savings", "label": "예적금", "value": savings, "category": "asset"},
+            {"key": "jeonse_deposit", "label": "전세 보증금", "value": jeonse_deposit, "category": "asset"},
+            {"key": "car_loan", "label": "차 할부", "value": car_loan, "category": "debt"},
+            {"key": "jeonse_loan", "label": "전세 대출", "value": jeonse_loan, "category": "debt"},
+            {"key": "monthly_saving", "label": "월 예적금", "value": monthly_saving, "category": "plan"},
+            {"key": "home_target_low", "label": "목표 매매가 하단", "value": home_target_low, "category": "plan"},
+            {"key": "home_target_high", "label": "목표 매매가 상단", "value": home_target_high, "category": "plan"},
+        ],
     }
 
 

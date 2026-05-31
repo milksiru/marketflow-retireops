@@ -64,6 +64,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"channels": db.list_channels()})
         if path == "/api/subscriptions":
             return self._json({"subscriptions": db.list_subscriptions()})
+        if path == "/api/family-plan":
+            return self._json({"family_plan": market_snapshot()["family_plan"]})
         return self._json({"error": "not found"}, 404)
 
     def do_POST(self):
@@ -109,6 +111,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/subscriptions":
             subscription_id = db.upsert_subscription(payload)
             return self._json({"status": "saved", "id": subscription_id})
+        if path == "/api/family-plan":
+            updated = db.update_family_plan_settings(payload)
+            return self._json({"status": "saved", "updated": updated, "family_plan": market_snapshot()["family_plan"]})
         return self._json({"error": "not found"}, 404)
 
     def do_PUT(self):
@@ -280,6 +285,12 @@ class Handler(BaseHTTPRequestHandler):
     .money-card b { display: block; margin-top: 8px; font-size: 22px; font-weight: 950; font-variant-numeric: tabular-nums; }
     .finance-list { display: grid; gap: 6px; }
     .finance-list .row { padding: 10px 0; }
+    .edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .edit-field { display: grid; gap: 6px; }
+    .edit-field label { color: var(--muted); font-size: 12px; font-weight: 850; }
+    .edit-field input { width: 100%; font-variant-numeric: tabular-nums; }
+    .save-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+    .save-state { color: var(--muted); font-size: 12px; }
     .brief-card .row { align-items: start; }
     .brief-no { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: #eef6ff; color: var(--blue); font-size: 12px; font-weight: 900; }
     .risk-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; height: 26px; border-radius: 999px; background: #eef6ff; color: var(--blue); font-weight: 900; font-size: 12px; }
@@ -299,7 +310,7 @@ class Handler(BaseHTTPRequestHandler):
       .asset-row .asset-price { text-align: left; }
       .asset-row .tiny-spark { grid-column: 1 / -1; }
       .hero-mood .mood { grid-template-columns: 1fr; }
-      .finance-grid, .money-grid { grid-template-columns: 1fr; }
+      .finance-grid, .money-grid, .edit-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -360,6 +371,7 @@ class Handler(BaseHTTPRequestHandler):
         <div class="finance-grid">
           <div class="grid">
             <div class="card"><div class="section-head"><h2>우리 가족 자금 상황</h2><span class="muted">주택 매매 목표</span></div><div id="familyOverview"></div></div>
+            <div class="card"><div class="section-head"><h2>금액 수정</h2><span class="muted">저장 즉시 반영</span></div><div id="familyEditor" class="edit-grid"></div><div class="save-row"><span id="familySaveState" class="save-state">금액을 수정한 뒤 저장하세요.</span><button class="primary" onclick="saveFamilyPlan()">저장</button></div></div>
             <div class="card"><h2>목표 진행률</h2><div id="familyGoalsPage" class="list"></div></div>
             <div class="card"><h2>실행 순서</h2><div id="familyStepsPage" class="step-list"></div></div>
           </div>
@@ -463,6 +475,12 @@ class Handler(BaseHTTPRequestHandler):
     function miniSpark(points, tone) {
       return spark(points, tone).replace('class="spark"', 'class="spark tiny-spark"');
     }
+    function formatWon(value) {
+      return new Intl.NumberFormat("ko-KR").format(Number(value || 0));
+    }
+    function parseWon(value) {
+      return Number(String(value || "").replace(/[^\\d]/g, "")) || 0;
+    }
     function renderFamilyPlan(plan) {
       if (!plan) return;
       const goalHtml = plan.goals.map(g => {
@@ -483,6 +501,10 @@ class Handler(BaseHTTPRequestHandler):
       if (familyGoals) familyGoals.innerHTML = goalHtml;
       const familySteps = document.getElementById("familyStepsPage");
       if (familySteps) familySteps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
+      const editor = document.getElementById("familyEditor");
+      if (editor && !editor.contains(document.activeElement)) {
+        editor.innerHTML = plan.editable.map(item => `<div class="edit-field"><label>${item.label}</label><input data-family-key="${item.key}" value="${formatWon(item.value)}" inputmode="numeric" oninput="this.value = formatWon(parseWon(this.value))"></div>`).join("");
+      }
     }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
@@ -525,6 +547,15 @@ class Handler(BaseHTTPRequestHandler):
     async function saveSubscription() {
       await fetch("/api/subscriptions", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({report_type:subReport.value, channel_type:subChannel.value, recipient:subRecipient.value, send_time:subTime.value})});
       await loadSubscriptions();
+    }
+    async function saveFamilyPlan() {
+      const values = {};
+      document.querySelectorAll("[data-family-key]").forEach(input => values[input.dataset.familyKey] = parseWon(input.value));
+      document.getElementById("familySaveState").textContent = "저장 중...";
+      const result = await fetch("/api/family-plan", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({values})}).then(r => r.json());
+      renderFamilyPlan(result.family_plan);
+      await loadDashboard();
+      document.getElementById("familySaveState").textContent = "저장 완료";
     }
     async function sendSmsTest() {
       await fetch("/api/notifications/sms/test", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({recipient:smsRecipient.value, provider:smsProvider.value})});

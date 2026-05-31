@@ -115,6 +115,12 @@ def init(conn):
           content text not null,
           created_at text not null
         );
+
+        create table if not exists family_plan_settings (
+          setting_key text primary key,
+          amount integer not null,
+          updated_at text not null
+        );
         """
     )
     ensure_columns(conn, "notification_channels", {"sender": "text", "recipient": "text"})
@@ -410,6 +416,44 @@ def notification_stats():
         }
 
 
+def family_plan_settings():
+    with connect() as conn:
+        rows = conn.execute("select setting_key, amount from family_plan_settings").fetchall()
+        return {row["setting_key"]: row["amount"] for row in rows}
+
+
+def update_family_plan_settings(payload):
+    allowed = {
+        "cash_stock",
+        "park_juyoung_retirement",
+        "kim_jihun_retirement",
+        "savings",
+        "car_loan",
+        "jeonse_deposit",
+        "jeonse_loan",
+        "monthly_saving",
+        "home_target_low",
+        "home_target_high",
+    }
+    values = payload.get("values", payload)
+    updated = {}
+    with connect() as conn:
+        for key, value in values.items():
+            if key not in allowed:
+                continue
+            amount = max(0, int(value or 0))
+            conn.execute(
+                """
+                insert into family_plan_settings (setting_key, amount, updated_at)
+                values (?, ?, ?)
+                on conflict(setting_key) do update set amount = excluded.amount, updated_at = excluded.updated_at
+                """,
+                (key, amount, now_iso()),
+            )
+            updated[key] = amount
+    return updated
+
+
 if os.environ.get("DATABASE_HOST"):
     from app import db_pg as _pg
 
@@ -432,3 +476,5 @@ if os.environ.get("DATABASE_HOST"):
     insert_daily_report = _pg.insert_daily_report
     latest_daily_report = _pg.latest_daily_report
     notification_stats = _pg.notification_stats
+    family_plan_settings = _pg.family_plan_settings
+    update_family_plan_settings = _pg.update_family_plan_settings

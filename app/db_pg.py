@@ -170,6 +170,15 @@ def init(conn):
         )
         cur.execute(
             """
+            create table if not exists family_plan_settings (
+              setting_key text primary key,
+              amount bigint not null,
+              updated_at timestamptz not null default now()
+            )
+            """
+        )
+        cur.execute(
+            """
             create table if not exists market_ticks (
               time timestamptz not null,
               symbol text not null,
@@ -383,4 +392,42 @@ def notification_stats():
             """
         )
         return _rows(cur)[0]
+
+
+def family_plan_settings():
+    with connect() as conn, cursor(conn) as cur:
+        cur.execute("select setting_key, amount from family_plan_settings")
+        return {row["setting_key"]: int(row["amount"]) for row in _rows(cur)}
+
+
+def update_family_plan_settings(payload):
+    allowed = {
+        "cash_stock",
+        "park_juyoung_retirement",
+        "kim_jihun_retirement",
+        "savings",
+        "car_loan",
+        "jeonse_deposit",
+        "jeonse_loan",
+        "monthly_saving",
+        "home_target_low",
+        "home_target_high",
+    }
+    values = payload.get("values", payload)
+    updated = {}
+    with connect() as conn, cursor(conn) as cur:
+        for key, value in values.items():
+            if key not in allowed:
+                continue
+            amount = max(0, int(value or 0))
+            cur.execute(
+                """
+                insert into family_plan_settings (setting_key, amount, updated_at)
+                values (%s, %s, now())
+                on conflict (setting_key) do update set amount = excluded.amount, updated_at = now()
+                """,
+                (key, amount),
+            )
+            updated[key] = amount
+    return updated
 
