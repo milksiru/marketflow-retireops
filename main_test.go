@@ -79,3 +79,24 @@ func TestMemorySubscriptionUpsert(t *testing.T) {
 		t.Fatalf("subscription was not updated: %#v", items)
 	}
 }
+
+func TestCalendarManualEventUpsert(t *testing.T) {
+	app := &App{store: newMemoryStore()}
+	event, err := app.saveCalendarEvent(map[string]any{
+		"date":     "2026-06-12",
+		"market":   "NASDAQ",
+		"company":  "SpaceX",
+		"title":    "나스닥 스페이스 X 상장 알림",
+		"category": "상장",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !event.Manual || event.Status != "수동등록" || event.Confidence != 70 {
+		t.Fatalf("manual calendar event not normalized: %#v", event)
+	}
+	items, _ := app.store.ListCalendarEvents()
+	if len(items) != 1 {
+		t.Fatalf("expected one calendar event, got %d", len(items))
+	}
+}

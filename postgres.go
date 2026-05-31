@@ -63,6 +63,13 @@ create table if not exists daily_reports (
  id bigserial primary key, report_date text not null, title text not null, market_mood text not null,
  risk_level text not null, summary text not null, dc_comment text not null, content text not null,
  created_at timestamptz not null default now());
+create table if not exists market_calendar_events (
+ id bigserial primary key, event_date date not null, market text not null, company text not null, title text not null,
+ category text not null, status text not null, priority text not null default 'medium', note text not null default '',
+ source text not null, source_url text not null default '', external_id text not null default '',
+ confidence integer not null default 50, official boolean not null default false, manual boolean not null default false,
+ created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create unique index if not exists market_calendar_events_external_id_idx on market_calendar_events(external_id) where external_id <> '';
 create table if not exists family_plan_settings (
  setting_key text primary key, amount bigint not null, updated_at timestamptz not null default now());`)
 	if err != nil {
@@ -286,6 +293,39 @@ func (p *postgresStore) LatestDailyReport() (*DailyReport, error) {
 		return nil, nil
 	}
 	return &x, e
+}
+func (p *postgresStore) ListCalendarEvents() ([]CalendarEvent, error) {
+	r, e := p.db.Query(`select id,event_date::text,market,company,title,category,status,priority,note,source,source_url,external_id,confidence,official,manual,created_at::text,updated_at::text from market_calendar_events where event_date >= current_date - interval '60 days' order by event_date,id`)
+	if e != nil {
+		return nil, e
+	}
+	defer r.Close()
+	out := []CalendarEvent{}
+	for r.Next() {
+		var x CalendarEvent
+		if e := r.Scan(&x.ID, &x.Date, &x.Market, &x.Company, &x.Title, &x.Category, &x.Status, &x.Priority, &x.Note, &x.Source, &x.SourceURL, &x.ExternalID, &x.Confidence, &x.Official, &x.Manual, &x.CreatedAt, &x.UpdatedAt); e != nil {
+			return nil, e
+		}
+		out = append(out, x)
+	}
+	return out, r.Err()
+}
+func (p *postgresStore) UpsertCalendarEvent(v CalendarEvent) (CalendarEvent, error) {
+	if v.ExternalID == "" {
+		v.ExternalID = fmt.Sprintf("manual:%s:%s:%s", v.Date, v.Market, v.Title)
+	}
+	e := p.db.QueryRow(`
+insert into market_calendar_events(event_date,market,company,title,category,status,priority,note,source,source_url,external_id,confidence,official,manual)
+values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+on conflict(external_id) where external_id <> '' do update set
+ event_date=excluded.event_date, market=excluded.market, company=excluded.company, title=excluded.title,
+ category=excluded.category, status=excluded.status, priority=excluded.priority, note=excluded.note,
+ source=excluded.source, source_url=excluded.source_url, confidence=excluded.confidence,
+ official=excluded.official, manual=excluded.manual, updated_at=now()
+returning id,event_date::text,market,company,title,category,status,priority,note,source,source_url,external_id,confidence,official,manual,created_at::text,updated_at::text`,
+		v.Date, v.Market, v.Company, v.Title, v.Category, v.Status, v.Priority, v.Note, v.Source, v.SourceURL, v.ExternalID, v.Confidence, v.Official, v.Manual).
+		Scan(&v.ID, &v.Date, &v.Market, &v.Company, &v.Title, &v.Category, &v.Status, &v.Priority, &v.Note, &v.Source, &v.SourceURL, &v.ExternalID, &v.Confidence, &v.Official, &v.Manual, &v.CreatedAt, &v.UpdatedAt)
+	return v, e
 }
 func boolValue(v any) *bool {
 	if b, ok := v.(bool); ok {

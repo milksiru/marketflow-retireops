@@ -29,6 +29,34 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  name: calendar-collector-cronjob
+  namespace: apps
+spec:
+  schedule: "10 */2 * * *"
+  timeZone: Asia/Seoul
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: calendar-collector
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:f6f6fa0bd19a
+              args: ["calendar"]
+              envFrom:
+                - secretRef:
+                    name: marketflow-retireops-secrets
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: marketflow-retireops-data
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
   name: analyzer-cronjob
   namespace: apps
 spec:

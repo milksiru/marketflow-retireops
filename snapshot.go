@@ -92,6 +92,10 @@ func (a *App) snapshot() map[string]any {
 	for i := range rankings {
 		rankings[i]["rank"] = i + 1
 	}
+	calendarEvents, _ := a.store.ListCalendarEvents()
+	if len(calendarEvents) == 0 {
+		calendarEvents = seedCalendarEvents()
+	}
 	return map[string]any{
 		"as_of": time.Now().Format(time.RFC3339), "source": "marketflow-go", "cache_status": "ready", "refresh_seconds": 25,
 		"mood":   map[string]any{"state": "Risk On", "score": 74, "plain": "주요 지수와 관심 종목의 최신 조회값을 기준으로 산출한 시장 상태입니다.", "drivers": []string{"관심 종목 흐름 확인", "환율과 금리 점검", "변동성 지수 점검"}},
@@ -101,23 +105,8 @@ func (a *App) snapshot() map[string]any {
 		"dc":       map[string]any{"style": "균형 성장형", "risk_score": 62, "rebalance": "목표 비중과 현재 비중 차이를 확인하세요.", "allocation": []map[string]any{{"label": "주식형", "target": 55, "current": 59}, {"label": "채권형", "target": 30, "current": 27}, {"label": "현금성", "target": 15, "current": 14}}, "plain_language": "신규 납입금은 부족한 비중을 채우는 방식으로 검토하세요."},
 		"alerts":   []map[string]any{{"level": "watch", "title": "Dollar Strong", "message": "환율 흐름을 확인하세요."}, {"level": "info", "title": "Rebalance Needed", "message": "목표 비중 차이를 점검하세요."}},
 		"rankings": rankings, "news_sources": []map[string]any{{"source": "Yahoo Finance", "title": "시장 가격 및 종목 뉴스 확인", "summary": "개별 종목 흐름을 확인합니다.", "url": "https://finance.yahoo.com/"}, {"source": "Reuters Markets", "title": "글로벌 시장 뉴스", "summary": "시장 위험 이벤트를 확인합니다.", "url": "https://www.reuters.com/markets/"}},
-		"listing_calendar": listingCalendar(),
+		"listing_calendar": a.calendarPayload(calendarEvents),
 		"family_plan":      family, "taeri_plan": map[string]any{"name": "태리", "birth": "2022-11-11", "age": "성장 중", "profile": "어린이집 생활", "summary": "생활, 건강, 지원제도를 한곳에서 점검합니다.", "checkpoints": []map[string]any{{"title": "어린이집 생활", "body": "등원, 수면, 식사, 친구 관계에서 달라진 점을 기록합니다."}, {"title": "건강", "body": "예방접종 기록과 다음 검진 일정을 확인합니다."}, {"title": "언어와 정서", "body": "표현 방식과 감정 조절의 변화를 천천히 살펴봅니다."}}, "todo": []string{"어린이집 상담 메모를 정리합니다.", "예방접종과 영유아 검진 일정을 확인합니다.", "지원제도 변경 여부를 주민센터에서 다시 확인합니다."}, "sources": []map[string]any{{"source": "질병관리청 예방접종도우미", "title": "어린이 예방접종 확인", "summary": "예방접종 기록과 지정 의료기관을 확인합니다.", "url": "https://nip.kdca.go.kr/"}, {"source": "아이돌봄서비스", "title": "아이돌봄 지원 확인", "summary": "가정 상황에 맞는 돌봄 서비스 지원 범위를 확인합니다.", "url": "https://www.idolbom.go.kr/front/srvcGuide"}}},
-	}
-}
-func listingCalendar() map[string]any {
-	return map[string]any{
-		"month": "2026-06",
-		"source": "상장/IPO 수집 자동 표시",
-		"updated_at": time.Now().Format(time.RFC3339),
-		"events": []map[string]any{
-			{"date": "2026-06-12", "market": "NASDAQ", "company": "SpaceX", "title": "나스닥 스페이스 X 상장 알림", "category": "상장", "status": "수집 예시", "priority": "high", "note": "자동 수집 일정 예시입니다. 실제 상장 확정 여부는 공시와 거래소 자료로 재확인합니다."},
-			{"date": "2026-06-18", "market": "KOSDAQ", "company": "신규 청약 후보", "title": "국내 IPO 청약 일정 점검", "category": "청약", "status": "관찰", "priority": "medium", "note": "증권신고서, 청약일, 환불일을 함께 확인합니다."},
-			{"date": "2026-06-20", "market": "NASDAQ", "company": "대형 기술주", "title": "분기 실적 발표 후보 점검", "category": "실적", "status": "대기", "priority": "low", "note": "실적 발표일, 컨센서스, 시간외 변동성을 함께 확인합니다."},
-			{"date": "2026-06-24", "market": "NYSE", "company": "해외 신규 상장 후보", "title": "해외 신규 상장 캘린더 확인", "category": "상장", "status": "관찰", "priority": "medium", "note": "거래소 캘린더와 뉴스 출처를 대조합니다."},
-			{"date": "2026-06-26", "market": "KRX", "company": "배당 캘린더", "title": "배당락/기준일 후보 점검", "category": "배당", "status": "대기", "priority": "low", "note": "배당 기준일과 배당락 영향은 공시 기준으로 재확인합니다."},
-			{"date": "2026-06-27", "market": "KRX", "company": "월말 리마인드", "title": "월말 배당/실적 캘린더 확인", "category": "시장일정", "status": "대기", "priority": "low", "note": "배당락, 실적 발표, 휴장일을 함께 점검합니다."},
-		},
 	}
 }
 func watchlist(board []map[string]any) []map[string]any {

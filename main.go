@@ -49,6 +49,8 @@ type Store interface {
 	LatestSignals(int) ([]Signal, error)
 	InsertDailyReport(DailyReport) error
 	LatestDailyReport() (*DailyReport, error)
+	ListCalendarEvents() ([]CalendarEvent, error)
+	UpsertCalendarEvent(CalendarEvent) (CalendarEvent, error)
 }
 
 type MarketPrice struct {
@@ -88,6 +90,26 @@ type DailyReport struct {
 	DCComment  string `json:"dc_comment"`
 	Content    string `json:"content"`
 	CreatedAt  string `json:"created_at,omitempty"`
+}
+
+type CalendarEvent struct {
+	ID         int64  `json:"id,omitempty"`
+	Date       string `json:"date"`
+	Market     string `json:"market"`
+	Company    string `json:"company"`
+	Title      string `json:"title"`
+	Category   string `json:"category"`
+	Status     string `json:"status"`
+	Priority   string `json:"priority"`
+	Note       string `json:"note"`
+	Source     string `json:"source"`
+	SourceURL  string `json:"source_url,omitempty"`
+	ExternalID string `json:"external_id,omitempty"`
+	Confidence int    `json:"confidence"`
+	Official   bool   `json:"official"`
+	Manual     bool   `json:"manual"`
+	CreatedAt  string `json:"created_at,omitempty"`
+	UpdatedAt  string `json:"updated_at,omitempty"`
 }
 
 func main() {
@@ -146,6 +168,9 @@ func (a *App) route(method, path string, payload map[string]any) (any, int, erro
 	switch {
 	case method == "GET" && path == "/api/dashboard":
 		return a.snapshot(), 200, nil
+	case method == "GET" && path == "/api/calendar":
+		events, err := a.store.ListCalendarEvents()
+		return map[string]any{"calendar": a.calendarPayload(events)}, 200, err
 	case method == "GET" && path == "/api/reports":
 		return map[string]any{"reports": listReports()}, 200, nil
 	case method == "GET" && path == "/api/analyze/latest":
@@ -189,6 +214,12 @@ func (a *App) route(method, path string, payload map[string]any) (any, int, erro
 		}
 		report, err := a.generateDailyReport()
 		return map[string]any{"collector": collected, "analysis": analyzed, "report": report}, 200, err
+	case method == "POST" && path == "/api/calendar/collect":
+		result, err := a.collectCalendar()
+		return result, 200, err
+	case method == "POST" && path == "/api/calendar/events":
+		event, err := a.saveCalendarEvent(payload)
+		return map[string]any{"status": "saved", "event": event}, 200, err
 	case method == "POST" && path == "/api/reports/daily/send-sms":
 		result, err := a.sendDailyReportSMS()
 		return result, 200, err
@@ -224,6 +255,8 @@ func (a *App) runJob(name string) error {
 	switch name {
 	case "collect":
 		result, err = a.collect(env("MARKETFLOW_COLLECTOR_PROVIDER", "mock"))
+	case "calendar":
+		result, err = a.collectCalendar()
 	case "analyze":
 		result, err = a.analyze()
 	case "daily-report":
@@ -583,6 +616,7 @@ type memoryStore struct {
 	scores                        []MarketScore
 	signals                       []Signal
 	reports                       []DailyReport
+	calendar                      []CalendarEvent
 }
 
 func newMemoryStore() *memoryStore {
@@ -740,6 +774,33 @@ func (m *memoryStore) LatestDailyReport() (*DailyReport, error) {
 	}
 	v := m.reports[len(m.reports)-1]
 	return &v, nil
+}
+func (m *memoryStore) ListCalendarEvents() ([]CalendarEvent, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]CalendarEvent{}, m.calendar...), nil
+}
+func (m *memoryStore) UpsertCalendarEvent(v CalendarEvent) (CalendarEvent, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if v.ExternalID == "" {
+		v.ExternalID = fmt.Sprintf("manual:%s:%s:%s", v.Date, v.Market, v.Title)
+	}
+	now := time.Now().Format(time.RFC3339)
+	for i, item := range m.calendar {
+		if item.ExternalID != "" && item.ExternalID == v.ExternalID {
+			v.ID = item.ID
+			v.CreatedAt = item.CreatedAt
+			v.UpdatedAt = now
+			m.calendar[i] = v
+			return v, nil
+		}
+	}
+	v.ID = int64(len(m.calendar) + 1)
+	v.CreatedAt = now
+	v.UpdatedAt = now
+	m.calendar = append(m.calendar, v)
+	return v, nil
 }
 func cloneMap(v map[string]any) map[string]any {
 	out := map[string]any{}
