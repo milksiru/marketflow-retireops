@@ -206,6 +206,11 @@
       --up: #f04452; --down: #3182f6; --warn: #f59f00; --green: #00a86b;
     }
     body { background: var(--bg); letter-spacing: -.02em; }
+    body[data-theme="dark"] { --bg: #111827; --panel: #18212f; --panel2: #202b3a; --line: #2d3a4b; --text: #f5f7fa; --muted: #a8b3c2; --soft: #d2d8e0; }
+    body[data-theme="dark"] aside, body[data-theme="dark"] .clock, body[data-theme="dark"] .workspace-chip, body[data-theme="dark"] .detail-disclosure { background: #18212f; }
+    body[data-theme="dark"] .focus-stock, body[data-theme="dark"] .guide-step, body[data-theme="dark"] .tile, body[data-theme="dark"] .money-card, body[data-theme="dark"] .info-card { background: #202b3a; }
+    body[data-density="comfortable"] .card { padding: 20px; }
+    body[data-density="comfortable"] .row { padding: 13px 0; }
     .shell { grid-template-columns: 214px minmax(0, 1fr); }
     aside { padding: 18px 12px 24px; background: #fff; }
     .brand { display: flex; align-items: center; gap: 9px; width: 100%; margin: 0 0 28px; padding: 4px 8px; font-size: 17px; letter-spacing: -.04em; }
@@ -225,7 +230,7 @@
     .page-kicker { margin-bottom: 5px; color: #3182f6; font-size: 12px; letter-spacing: -.02em; }
     .header-copy p { margin-top: 6px; font-size: 13px; }
     .header-actions { align-items: center; }
-    .clock { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; padding: 0; border: 0; background: transparent; white-space: nowrap; }
+    .clock { position: fixed; top: 10px; right: 14px; z-index: 10; display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.92); white-space: nowrap; backdrop-filter: blur(12px); }
     .clock-time { font-size: 14px; font-weight: 900; letter-spacing: -.02em; }
     .clock-date, .clock-meta { color: var(--muted); font-size: 11px; }
     .source-meta, .sessions { display: none; }
@@ -257,6 +262,12 @@
     .detail-disclosure[open] > summary { border-bottom: 1px solid var(--line); }
     .detail-body { padding: 14px; }
     .bounded-list { max-height: 310px; overflow-y: auto; padding-right: 4px; }
+    .coming-soon { display: grid; place-items: center; min-height: 240px; text-align: center; }
+    .coming-soon b { display: block; margin-bottom: 8px; font-size: 24px; }
+    .setting-list { display: grid; gap: 0; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .setting-row:last-child { border-bottom: 0; }
+    .setting-row select { min-width: 140px; }
     .dashboard-shell { grid-template-columns: minmax(0, 1fr) 292px; gap: 18px; }
     .main-board, .right-rail { gap: 12px; }
     .right-rail { top: 14px; }
@@ -289,7 +300,7 @@
       main { padding: 16px 13px 76px; }
       header { display: grid; gap: 10px; }
       .workspace-bar { margin: 0 -13px 12px; padding: 0 13px 12px; }
-      .clock { min-width: 0; }
+      .clock { width: auto; min-width: 0; }
       .header-actions .primary { display: none; }
       .card { border-radius: 12px; padding: 14px; }
       .hero-mood { min-height: 0; }
@@ -311,8 +322,10 @@
       aside { display: none; }
       main { width: 100%; min-width: 0; padding: 14px 12px 72px; overflow-x: hidden; }
       header, .header-actions { display: grid; width: 100%; min-width: 0; gap: 10px; }
+      header { padding-top: 34px; }
       h1 { font-size: 25px; }
-      .clock { width: 100%; min-width: 0; }
+      .clock { top: 8px; right: 8px; width: auto; min-width: 0; padding: 6px 8px; }
+      .clock-meta { display: none; }
       .workspace-bar { margin: 0 -12px 12px; padding: 0 12px 12px; }
       .dashboard-shell, .market-overview, .right-rail, .finance-grid,
       .money-grid, .edit-grid, .info-grid, .top, .two, .cards, .channels,
@@ -362,7 +375,6 @@
             <div class="source-meta" id="sourceMeta">실시간 수집 대기</div>
             <div class="sessions" id="sessions"></div>
           </div>
-          <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
         </div>
       </header>
       <div class="workspace-bar" id="workspaceBar"></div>
@@ -460,30 +472,16 @@
         </div>
       </section>
       <section id="notifications">
-        <div class="grid cards" id="stats"></div>
-        <div class="card" style="margin-top:14px"><h2>Notification Channels</h2><div id="channels" class="grid channels"></div></div>
-        <div class="card" style="margin-top:14px"><h2>Notification Logs</h2><div id="logs" class="list bounded-list"></div></div>
+        <div class="card coming-soon"><div><b>알림 기능 준비중</b><p class="muted">시장 위험 신호와 주요 일정 알림은 추후 제공할 예정입니다.</p></div></div>
       </section>
       <section id="settings">
-        <div class="card"><h2>Report Subscription</h2>
-          <div class="grid two">
-            <select id="subReport"><option value="morning">Morning</option><option value="market-open">Market Open</option><option value="evening">Evening</option><option value="weekly">Weekly</option><option value="monthly-dc">Monthly DC</option></select>
-            <select id="subChannel"><option value="sms">SMS</option><option value="kakao">Kakao</option><option value="email">Email</option><option value="telegram">Telegram</option><option value="teams">Teams</option></select>
-            <input id="subRecipient" placeholder="recipient" value="scheduled-recipient">
-            <input id="subTime" placeholder="send time" value="07:30">
+        <div class="card"><div class="section-head"><h2>일반 설정</h2><span class="muted">이 브라우저에 저장됩니다</span></div>
+          <div class="setting-list">
+            <div class="setting-row"><span><b>테마</b><br><span class="muted">화면 밝기를 선택합니다.</span></span><select id="themeSelect" onchange="saveSiteSettings()"><option value="light">라이트</option><option value="dark">다크</option><option value="system">시스템 설정</option></select></div>
+            <div class="setting-row"><span><b>화면 밀도</b><br><span class="muted">정보 표시 간격을 선택합니다.</span></span><select id="densitySelect" onchange="saveSiteSettings()"><option value="compact">간결하게</option><option value="comfortable">여유 있게</option></select></div>
           </div>
-          <p style="margin-top:12px"><button class="primary" onclick="saveSubscription()">구독 저장</button></p>
-          <div id="subscriptions" class="list" style="margin-top:12px"></div>
         </div>
-        <div class="card" style="margin-top:14px"><h2>SMS Notification</h2>
-          <p class="muted">문자 알림은 투자 참고 정보를 전달합니다. 자동 매수/매도 기능은 제공하지 않습니다.</p>
-          <p class="muted">SMS Provider 설정 전에는 Mock 모드로만 동작합니다.</p>
-          <div class="grid two" style="margin-top:12px">
-            <select id="smsProvider"><option value="mock">mock</option><option value="solapi">solapi</option><option value="sens">sens</option></select>
-            <input id="smsRecipient" placeholder="01012345678" value="01000000000">
-          </div>
-          <p style="margin-top:12px"><button class="primary" onclick="sendSmsTest()">테스트 문자 발송</button></p>
-        </div>
+        <div class="card coming-soon" style="margin-top:14px;min-height:150px"><div><b>추가 설정 준비중</b><p class="muted">개인화, 알림, 데이터 표시 옵션은 추후 제공할 예정입니다.</p></div></div>
       </section>
     </main>
   </div>
@@ -494,8 +492,8 @@
       dashboard: ["오늘의 요약", "가족 자금", "체크포인트", "주요 지수", "알림"],
       investment: ["실시간 마켓", "관심 ETF", "DC 리밸런싱", "시장 알림", "뉴스 근거"],
       reports: ["오전 브리핑", "개장 전 체크", "마감 브리핑", "주간 리포트", "월간 DC"],
-      notifications: ["발송 현황", "채널 설정", "최근 발송 로그"],
-      settings: ["리포트 구독", "SMS 발송 설정", "수신자 관리"],
+      notifications: ["준비중"],
+      settings: ["일반", "테마", "추가 설정 준비중"],
       family: ["자금 현황", "자산·부채", "목표 진행률", "실행 순서", "왕숙2 A4"],
       taeri: ["성장 체크포인트", "이번 달 할 일", "건강 일정", "지원제도", "참고 출처"],
     };
@@ -503,8 +501,8 @@
       dashboard: ["MarketFlow Overview", "오늘의 Overview", "시장, 가족 자금, 알림에서 지금 확인할 내용을 한 화면에 모았습니다."],
       investment: ["Investment", "투자", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 자세히 확인합니다."],
       reports: ["Reports", "리포트", "Daily Report와 SMS 브리프 내용을 확인합니다."],
-      notifications: ["Notifications", "알림", "문자 발송 채널, 구독, 최근 발송 로그를 관리합니다."],
-      settings: ["Settings", "설정", "구독과 SMS 테스트 설정을 관리합니다."],
+      notifications: ["Notifications", "알림", "시장 위험 신호와 주요 일정 알림은 추후 제공할 예정입니다."],
+      settings: ["Settings", "설정", "사이트의 기본 화면 표시 방식을 설정합니다."],
       family: ["Family Plan", "가족 플랜", "우리 가족 자금 상황과 주택 매매 목표를 계산합니다."],
       taeri: ["Taeri Care", "태리 키우기", "태리의 어린이집 생활, 건강, 지원제도 체크포인트를 모읍니다."],
     };
@@ -554,6 +552,7 @@
       document.getElementById("pageTitle").textContent = meta[1];
       document.getElementById("pageSubtitle").textContent = meta[2];
       renderWorkspace(target);
+      if (target === "settings") syncSiteSettingsForm();
     }
     async function goHome() {
       nav("dashboard");
@@ -637,6 +636,26 @@
     function renderAssetRows(items) {
       return items.length ? `<div class="asset-row asset-head"><span>종목</span><span>현재가</span><span>등락률</span><span>흐름</span></div>` + items.map(t => `<div class="asset-row"><div class="asset-name"><span class="avatar">${t.symbol.slice(0,2)}</span><span><span class="asset-symbol">${t.symbol}</span><br><span class="asset-sub">${t.name} · ${t.signal}</span></span></div><div class="asset-price">${t.price}</div><div class="asset-change ${toneClass(t.tone)}">${t.change}</div>${miniSpark(t.spark, t.tone)}</div>`).join("") : `<p class="muted">관심 종목 시세를 수집하고 있습니다.</p>`;
     }
+    function resolvedTheme(theme) {
+      return theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : theme === "dark" ? "dark" : "light";
+    }
+    function applySiteSettings() {
+      const theme = localStorage.getItem("marketflow-theme") || "light";
+      const density = localStorage.getItem("marketflow-density") || "compact";
+      document.body.dataset.theme = resolvedTheme(theme);
+      document.body.dataset.density = density;
+    }
+    function syncSiteSettingsForm() {
+      const theme = document.getElementById("themeSelect");
+      const density = document.getElementById("densitySelect");
+      if (theme) theme.value = localStorage.getItem("marketflow-theme") || "light";
+      if (density) density.value = localStorage.getItem("marketflow-density") || "compact";
+    }
+    function saveSiteSettings() {
+      localStorage.setItem("marketflow-theme", document.getElementById("themeSelect").value);
+      localStorage.setItem("marketflow-density", document.getElementById("densitySelect").value);
+      applySiteSettings();
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
@@ -661,27 +680,6 @@
       const report = await fetch(`/api/reports/${type}`).then(r => r.json());
       document.getElementById("reportView").innerHTML = `<h3>${report.title}</h3><p class="muted">${report.summary}</p><div class="grid two" style="margin-top:12px"><div class="tile"><h3>요약</h3>${report.bullets.map(b => `<p style="margin:8px 0">${b}</p>`).join("")}</div><div class="tile"><h3>SMS Preview</h3><pre>${report.sms_preview}</pre><h3 style="margin-top:14px">Kakao Buttons</h3>${report.kakao_preview.buttons.map(b => `<span class="badge">${b}</span>`).join("")}</div></div>`;
     }
-    async function loadNotifications() {
-      const stats = await fetch("/api/notifications/stats").then(r => r.json());
-      document.getElementById("stats").innerHTML = Object.entries(stats).map(([k,v]) => `<div class="card"><p class="muted">${k.replaceAll("_"," ")}</p><div class="value">${v}</div></div>`).join("");
-      const channels = await fetch("/api/notifications/channels").then(r => r.json());
-      document.getElementById("channels").innerHTML = channels.channels.map(c => `<div class="tile"><h3><span class="switch ${c.enabled ? "on" : ""}"></span>${c.channel_type}</h3><p class="muted">${c.provider}</p><span class="badge">${c.enabled ? "enabled" : "disabled"}</span></div>`).join("");
-      const logs = await fetch("/api/notifications").then(r => r.json());
-      document.getElementById("logs").innerHTML = logs.logs.length ? logs.logs.slice(0,12).map(l => `<div class="row"><span><b>${l.title}</b><br><span class="muted">${l.channel_type} / ${l.recipient}</span></span><span class="${l.status === "sent" ? "up" : "down"}">${l.status}</span></div>`).join("") : `<p class="muted">아직 발송 로그가 없습니다.</p>`;
-    }
-    async function loadSubscriptions() {
-      const data = await fetch("/api/subscriptions").then(r => r.json());
-      document.getElementById("subscriptions").innerHTML = data.subscriptions.length ? data.subscriptions.map(s => `<div class="row"><span>${s.report_type} -> ${s.channel_type}<br><span class="muted">${s.recipient}</span></span><span>${s.send_time}</span></div>`).join("") : `<p class="muted">등록된 구독이 없습니다.</p>`;
-    }
-    async function sendTest() {
-      await fetch("/api/notifications/test", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({channel:"sms", recipient:"010-0000-0000", report_type:"morning"})});
-      await loadNotifications();
-      nav("notifications");
-    }
-    async function saveSubscription() {
-      await fetch("/api/subscriptions", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({report_type:subReport.value, channel_type:subChannel.value, recipient:subRecipient.value, send_time:subTime.value})});
-      await loadSubscriptions();
-    }
     async function saveFamilyPlan() {
       const values = {};
       document.querySelectorAll("[data-family-key]").forEach(input => values[input.dataset.familyKey] = parseWon(input.value));
@@ -691,12 +689,7 @@
       await loadDashboard();
       document.getElementById("familySaveState").textContent = "저장 완료";
     }
-    async function sendSmsTest() {
-      await fetch("/api/notifications/sms/test", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({recipient:smsRecipient.value, provider:smsProvider.value})});
-      await loadNotifications();
-      nav("notifications");
-    }
-    renderNav(); renderWorkspace(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports(); loadNotifications(); loadSubscriptions();
+    applySiteSettings(); renderNav(); renderWorkspace(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports();
   </script>
 </body>
 </html>

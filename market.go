@@ -5,7 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
+)
+
+var (
+	sparkMu       sync.RWMutex
+	sparkCache    = map[string][]float64{}
+	liveMu        sync.Mutex
+	livePrices    []MarketPrice
+	liveFetchedAt time.Time
 )
 
 var symbols = []struct{ yahoo, id, name string }{
@@ -37,6 +46,11 @@ func fetchLivePrices() ([]MarketPrice, error) {
 						RegularMarketPrice float64 `json:"regularMarketPrice"`
 						PreviousClose      float64 `json:"previousClose"`
 					} `json:"meta"`
+					Indicators struct {
+						Quote []struct {
+							Close []*float64 `json:"close"`
+						} `json:"quote"`
+					} `json:"indicators"`
 				} `json:"result"`
 			} `json:"chart"`
 		}
@@ -53,9 +67,69 @@ func fetchLivePrices() ([]MarketPrice, error) {
 		if meta.PreviousClose != 0 {
 			change = (meta.RegularMarketPrice - meta.PreviousClose) / meta.PreviousClose * 100
 		}
+		if quotes := body.Chart.Result[0].Indicators.Quote; len(quotes) > 0 {
+			storeSpark(item.id, quotes[0].Close)
+		}
 		out = append(out, MarketPrice{item.id, item.name, meta.RegularMarketPrice, change, 1000000, "yahoo-finance-chart", observed})
 	}
 	return out, nil
+}
+
+func dashboardPrices(fallback []MarketPrice) []MarketPrice {
+	liveMu.Lock()
+	defer liveMu.Unlock()
+	if len(livePrices) > 0 && time.Since(liveFetchedAt) < 25*time.Second {
+		return append([]MarketPrice(nil), livePrices...)
+	}
+	prices, err := fetchLivePrices()
+	if err != nil || len(prices) == 0 {
+		return fallback
+	}
+	livePrices = append([]MarketPrice(nil), prices...)
+	liveFetchedAt = time.Now()
+	return prices
+}
+
+func storeSpark(assetID string, closes []*float64) {
+	points := make([]float64, 0, len(closes))
+	for _, close := range closes {
+		if close != nil {
+			points = append(points, *close)
+		}
+	}
+	if len(points) < 2 {
+		return
+	}
+	if len(points) > 20 {
+		points = points[len(points)-20:]
+	}
+	sparkMu.Lock()
+	sparkCache[assetID] = points
+	sparkMu.Unlock()
+}
+
+func sparkFor(price MarketPrice) []float64 {
+	sparkMu.RLock()
+	points := append([]float64(nil), sparkCache[price.AssetID]...)
+	sparkMu.RUnlock()
+	if len(points) >= 2 {
+		return points
+	}
+	base := price.Price
+	if base == 0 {
+		base = 100
+	}
+	seed := 0
+	for _, ch := range price.AssetID {
+		seed += int(ch)
+	}
+	out := make([]float64, 8)
+	for i := range out {
+		wave := float64(((seed+i*7)%11)-5) / 500
+		progress := float64(i-3) * price.ChangePercent / 700
+		out[i] = base * (1 + wave + progress)
+	}
+	return out
 }
 
 func mockPrices() []MarketPrice {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,6 +40,19 @@ func TestMoneyUsesReadableKoreanUnits(t *testing.T) {
 		if got := money(value); got != want {
 			t.Fatalf("money(%d) returned %q, want %q", value, got, want)
 		}
+	}
+}
+
+func TestSparkForUsesDistinctFallbackAndCachedCloses(t *testing.T) {
+	samsung := MarketPrice{AssetID: "005930", Price: 73500, ChangePercent: 1.1}
+	hynix := MarketPrice{AssetID: "000660", Price: 208500, ChangePercent: 2.8}
+	if fmt.Sprint(sparkFor(samsung)) == fmt.Sprint(sparkFor(hynix)) {
+		t.Fatal("fallback sparklines must differ by asset")
+	}
+	first, second := 101.0, 103.0
+	storeSpark("005930", []*float64{&first, nil, &second})
+	if got := sparkFor(samsung); len(got) != 2 || got[0] != first || got[1] != second {
+		t.Fatalf("sparkFor must use cached market closes, got %#v", got)
 	}
 }
 

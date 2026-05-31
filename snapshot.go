@@ -54,6 +54,7 @@ func (a *App) snapshot() map[string]any {
 	if err != nil || len(prices) == 0 {
 		prices = mockPrices()
 	}
+	prices = dashboardPrices(prices)
 	indices := []map[string]any{}
 	board := []map[string]any{}
 	indexIDs := map[string]bool{"S&P500": true, "Nasdaq": true, "KOSPI": true, "Nikkei": true, "USD/KRW": true, "US10Y": true, "VIX": true, "BTC": true}
@@ -67,7 +68,7 @@ func (a *App) snapshot() map[string]any {
 		if (item.AssetID == "USD/KRW" || item.AssetID == "US10Y") && item.ChangePercent > 0 {
 			tone = "warn"
 		}
-		row := map[string]any{"symbol": item.AssetID, "name": item.AssetName, "change": fmt.Sprintf("%+.2f%%", item.ChangePercent), "tone": tone, "spark": []float64{48, 50, 49, 53, 57, 56, 61, 64}}
+		row := map[string]any{"symbol": item.AssetID, "name": item.AssetName, "change": fmt.Sprintf("%+.2f%%", item.ChangePercent), "tone": tone, "spark": sparkFor(item)}
 		if indexIDs[item.AssetID] {
 			row["value"] = formatPrice(item.Price)
 			row["session"] = "Market"
