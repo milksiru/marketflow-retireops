@@ -286,6 +286,12 @@ class Handler(BaseHTTPRequestHandler):
     .money-card b { display: block; margin-top: 8px; font-size: 22px; font-weight: 950; font-variant-numeric: tabular-nums; }
     .finance-list { display: grid; gap: 6px; }
     .finance-list .row { padding: 10px 0; }
+    .child-hero { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+    .child-age { font-size: 34px; font-weight: 950; color: var(--blue); }
+    .info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .info-card { background: var(--panel2); border-radius: 8px; padding: 14px; min-height: 112px; }
+    .info-card h3 { margin-bottom: 8px; }
+    .source-list { display: grid; gap: 8px; }
     .edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .edit-field { display: grid; gap: 6px; }
     .edit-field label { color: var(--muted); font-size: 12px; font-weight: 850; }
@@ -311,7 +317,8 @@ class Handler(BaseHTTPRequestHandler):
       .asset-row .asset-price { text-align: left; }
       .asset-row .tiny-spark { grid-column: 1 / -1; }
       .hero-mood .mood { grid-template-columns: 1fr; }
-      .finance-grid, .money-grid, .edit-grid { grid-template-columns: 1fr; }
+      .finance-grid, .money-grid, .edit-grid, .info-grid { grid-template-columns: 1fr; }
+      .child-hero { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -324,9 +331,9 @@ class Handler(BaseHTTPRequestHandler):
     <main>
       <header>
         <div class="header-copy">
-          <div class="page-kicker">MarketFlow Live Desk</div>
-          <h1>오늘의 시장 흐름</h1>
-          <p class="muted">시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다.</p>
+          <div class="page-kicker" id="pageKicker">MarketFlow Live Desk</div>
+          <h1 id="pageTitle">오늘의 시장 흐름</h1>
+          <p class="muted" id="pageSubtitle">시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다.</p>
         </div>
         <div class="header-actions">
           <div class="clock">
@@ -382,6 +389,19 @@ class Handler(BaseHTTPRequestHandler):
           </div>
         </div>
       </section>
+      <section id="taeri">
+        <div class="finance-grid">
+          <div class="grid">
+            <div class="card"><div id="taeriHero" class="child-hero"></div></div>
+            <div class="card"><div class="section-head"><h2>성장 체크포인트</h2><span class="muted">어린이집 3년차</span></div><div id="taeriChecks" class="info-grid"></div></div>
+            <div class="card"><h2>이번 달 할 일</h2><div id="taeriTodo" class="step-list"></div></div>
+          </div>
+          <div class="grid">
+            <div class="card"><div class="section-head"><h2>참고 출처</h2><span class="muted">공식 링크</span></div><div id="taeriSources" class="source-list"></div></div>
+            <div class="card"><h2>메모</h2><p class="muted">정책과 지원금은 매년 바뀔 수 있어 실제 신청 전 복지로, 어린이집, 주민센터에서 한 번 더 확인합니다.</p></div>
+          </div>
+        </div>
+      </section>
       <section id="notifications">
         <div class="grid cards" id="stats"></div>
         <div class="card" style="margin-top:14px"><h2>Notification Channels</h2><div id="channels" class="grid channels"></div></div>
@@ -412,7 +432,15 @@ class Handler(BaseHTTPRequestHandler):
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"],["family","가족 플랜"]];
+    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"],["family","가족 플랜"],["taeri","태리 키우기"]];
+    const viewMeta = {
+      dashboard: ["MarketFlow Live Desk", "오늘의 시장 흐름", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다."],
+      reports: ["Reports", "리포트", "Daily Report와 SMS 브리프 내용을 확인합니다."],
+      notifications: ["Notifications", "알림", "문자 발송 채널, 구독, 최근 발송 로그를 관리합니다."],
+      settings: ["Settings", "설정", "구독과 SMS 테스트 설정을 관리합니다."],
+      family: ["Family Plan", "가족 플랜", "우리 가족 자금 상황과 주택 매매 목표를 계산합니다."],
+      taeri: ["Taeri Care", "태리 키우기", "태리의 어린이집 생활, 건강, 지원제도 체크포인트를 모읍니다."],
+    };
     const toneClass = t => t === "up" ? "up" : t === "down" ? "down" : t === "warn" ? "warn" : "flat";
     function formatKst(value, options) {
       return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
@@ -454,6 +482,10 @@ class Handler(BaseHTTPRequestHandler):
     function nav(target) {
       document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === target));
       document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("active", b.dataset.nav === target));
+      const meta = viewMeta[target] || viewMeta.dashboard;
+      document.getElementById("pageKicker").textContent = meta[0];
+      document.getElementById("pageTitle").textContent = meta[1];
+      document.getElementById("pageSubtitle").textContent = meta[2];
     }
     async function goHome() {
       nav("dashboard");
@@ -512,10 +544,18 @@ class Handler(BaseHTTPRequestHandler):
         editor.innerHTML = plan.editable.map(item => `<div class="edit-field"><label>${item.label}</label><input data-family-key="${item.key}" value="${formatWon(item.value)}" inputmode="numeric" oninput="this.value = formatWon(parseWon(this.value))"></div>`).join("");
       }
     }
+    function renderTaeriPlan(plan) {
+      if (!plan) return;
+      document.getElementById("taeriHero").innerHTML = `<div><span class="badge">${plan.profile}</span><h2 style="margin-top:10px">${plan.name} 키우기</h2><p class="muted">${plan.birth} 출생 · ${plan.summary}</p></div><div class="child-age">${plan.age}</div>`;
+      document.getElementById("taeriChecks").innerHTML = plan.checkpoints.map(c => `<div class="info-card"><h3>${c.title}</h3><p class="muted">${c.body}</p></div>`).join("");
+      document.getElementById("taeriTodo").innerHTML = plan.todo.map(t => `<div class="step-item">${t}</div>`).join("");
+      document.getElementById("taeriSources").innerHTML = plan.sources.map(s => `<div class="news-row"><span class="news-source">${s.source}</span><a class="news-link" href="${s.url}" target="_blank" rel="noreferrer">${s.title}</a><p class="muted">${s.summary}</p><a class="detail-link" href="${s.url}" target="_blank" rel="noreferrer">자세히 보기</a></div>`).join("");
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
       renderFamilyPlan(data.family_plan);
+      renderTaeriPlan(data.taeri_plan);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = `<div class="quote-row quote-head"><span>자산</span><span>현재</span><span>변동</span><span>구분</span></div>` + data.indices.map(i => `<div class="quote-row"><span><b>${i.symbol}</b><br><span class="asset-sub">${i.name}</span></span><span class="value">${i.value}</span><span class="${toneClass(i.tone)}"><b>${i.change}</b></span><span class="mini-meta">${i.session} / ${i.volume}</span></div>`).join("");
