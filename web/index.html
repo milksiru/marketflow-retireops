@@ -233,6 +233,15 @@
     .workspace-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--soft); background: #fff; font-size: 12px; font-weight: 750; white-space: nowrap; }
     .workspace-chip.active { border-color: #d6e9ff; background: #eef6ff; color: #1b64da; }
     .workspace-chip i { display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .overview-card { display: grid; gap: 12px; align-content: start; }
+    .overview-card.wide { grid-column: span 2; }
+    .overview-metric { font-size: 30px; font-weight: 950; letter-spacing: -.06em; }
+    .overview-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+    .overview-link { border: 0; border-radius: 8px; padding: 8px 10px; background: #eef6ff; color: #1b64da; cursor: pointer; font: inherit; font-size: 12px; font-weight: 850; }
+    .overview-list { display: grid; gap: 0; }
+    .overview-item { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .overview-item:last-child { border-bottom: 0; }
     .dashboard-shell { grid-template-columns: minmax(0, 1fr) 292px; gap: 18px; }
     .main-board, .right-rail { gap: 12px; }
     .right-rail { top: 14px; }
@@ -280,7 +289,7 @@
       .right-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .right-rail .card:first-child { grid-row: span 2; }
     }
-    /* Phones get a single-column layout and a six-item bottom navigation. */
+    /* Phones get a single-column layout and a seven-item bottom navigation. */
     @media (max-width: 768px) {
       body { overflow-x: hidden; }
       .shell { display: block; min-width: 0; }
@@ -295,6 +304,8 @@
       .ticker, .market-grid {
         grid-template-columns: minmax(0, 1fr);
       }
+      .overview-grid { grid-template-columns: minmax(0, 1fr); }
+      .overview-card.wide { grid-column: auto; }
       .main-board, .right-rail, .card, .list, .row, .tile, .info-card {
         min-width: 0;
         max-width: 100%;
@@ -306,7 +317,7 @@
       .asset-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 4px; }
       .asset-row .asset-price { text-align: right; }
       .asset-row .tiny-spark { grid-column: 1 / -1; min-width: 0; }
-      .mobilebar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .mobilebar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
       .mobilebar button { min-width: 0; padding: 11px 2px; font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
     }
   </style>
@@ -339,6 +350,34 @@
       </header>
       <div class="workspace-bar" id="workspaceBar"></div>
       <section id="dashboard" class="active">
+        <div class="overview-grid">
+          <div class="card overview-card wide">
+            <div class="section-head"><h2>오늘의 Overview</h2><span class="muted">한눈에 보는 핵심 요약</span></div>
+            <div id="overviewMood"></div>
+            <div class="overview-actions"><button class="overview-link" onclick="nav('investment')">투자 상세 보기</button><button class="overview-link" onclick="nav('reports')">리포트 보기</button></div>
+          </div>
+          <div class="card overview-card">
+            <div class="section-head"><h2>가족 자금</h2><span class="muted">주거 목표 기준</span></div>
+            <div id="overviewFamily"></div>
+            <div class="overview-actions"><button class="overview-link" onclick="nav('family')">가족 플랜 보기</button></div>
+          </div>
+          <div class="card overview-card">
+            <div class="section-head"><h2>오늘의 체크포인트</h2><span class="muted">시장 브리핑</span></div>
+            <div id="overviewBrief" class="overview-list"></div>
+          </div>
+          <div class="card overview-card">
+            <div class="section-head"><h2>주요 지수</h2><span class="muted">현재 흐름</span></div>
+            <div id="overviewIndices" class="overview-list"></div>
+            <div class="overview-actions"><button class="overview-link" onclick="nav('investment')">시장 전체 보기</button></div>
+          </div>
+          <div class="card overview-card">
+            <div class="section-head"><h2>알림</h2><span class="muted">위험 신호</span></div>
+            <div id="overviewAlerts" class="overview-list"></div>
+            <div class="overview-actions"><button class="overview-link" onclick="nav('notifications')">알림 관리</button></div>
+          </div>
+        </div>
+      </section>
+      <section id="investment">
         <div class="dashboard-shell">
           <div class="main-board">
             <div class="market-overview">
@@ -425,9 +464,10 @@
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"],["family","가족 플랜"],["taeri","태리 키우기"]];
+    const views = [["dashboard","홈"],["investment","투자"],["reports","리포트"],["family","가족 플랜"],["taeri","태리 키우기"],["notifications","알림"],["settings","설정"]];
     const workspaceGroups = {
-      dashboard: ["실시간 마켓", "관심 ETF", "DC 리밸런싱", "시장 알림", "뉴스 근거"],
+      dashboard: ["오늘의 요약", "가족 자금", "체크포인트", "주요 지수", "알림"],
+      investment: ["실시간 마켓", "관심 ETF", "DC 리밸런싱", "시장 알림", "뉴스 근거"],
       reports: ["오전 브리핑", "개장 전 체크", "마감 브리핑", "주간 리포트", "월간 DC"],
       notifications: ["발송 현황", "채널 설정", "최근 발송 로그"],
       settings: ["리포트 구독", "SMS 발송 설정", "수신자 관리"],
@@ -435,7 +475,8 @@
       taeri: ["성장 체크포인트", "이번 달 할 일", "건강 일정", "지원제도", "참고 출처"],
     };
     const viewMeta = {
-      dashboard: ["MarketFlow Live Desk", "오늘의 시장 흐름", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다."],
+      dashboard: ["MarketFlow Overview", "오늘의 Overview", "시장, 가족 자금, 알림에서 지금 확인할 내용을 한 화면에 모았습니다."],
+      investment: ["Investment", "투자", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 자세히 확인합니다."],
       reports: ["Reports", "리포트", "Daily Report와 SMS 브리프 내용을 확인합니다."],
       notifications: ["Notifications", "알림", "문자 발송 채널, 구독, 최근 발송 로그를 관리합니다."],
       settings: ["Settings", "설정", "구독과 SMS 테스트 설정을 관리합니다."],
@@ -560,11 +601,23 @@
       document.getElementById("taeriTodo").innerHTML = plan.todo.map(t => `<div class="step-item">${t}</div>`).join("");
       document.getElementById("taeriSources").innerHTML = plan.sources.map(s => `<div class="news-row"><span class="news-source">${s.source}</span><a class="news-link" href="${s.url}" target="_blank" rel="noreferrer">${s.title}</a><p class="muted">${s.summary}</p><a class="detail-link" href="${s.url}" target="_blank" rel="noreferrer">자세히 보기</a></div>`).join("");
     }
+    function renderOverview(data) {
+      const plan = data.family_plan || {};
+      const metrics = plan.metrics || [];
+      const availableFunds = metrics.find(m => m.label === "가용 자금");
+      const homeTarget = metrics.find(m => m.label === "목표 하단");
+      document.getElementById("overviewMood").innerHTML = `<div class="overview-metric">${data.mood.score}점</div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.slice(0, 3).map(b => `<span class="badge">${b}</span>`).join("")}</p>`;
+      document.getElementById("overviewFamily").innerHTML = `<div class="overview-metric">${availableFunds ? availableFunds.value : "-"}</div><p class="muted">현재 가용 자금</p><div class="overview-item"><span>주택 목표 하단</span><b>${homeTarget ? homeTarget.value : "-"}</b></div>`;
+      document.getElementById("overviewBrief").innerHTML = data.brief.slice(0, 4).map((item, index) => `<div class="overview-item"><span>${index + 1}. ${item}</span></div>`).join("");
+      document.getElementById("overviewIndices").innerHTML = data.indices.slice(0, 4).map(item => `<div class="overview-item"><span><b>${item.symbol}</b></span><span class="${toneClass(item.tone)}"><b>${item.value}</b> ${item.change}</span></div>`).join("");
+      document.getElementById("overviewAlerts").innerHTML = data.alerts.slice(0, 4).map(item => `<div class="overview-item"><span>${item.title}</span><span class="badge">${item.level}</span></div>`).join("");
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
       renderFamilyPlan(data.family_plan);
       renderTaeriPlan(data.taeri_plan);
+      renderOverview(data);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = `<div class="quote-row quote-head"><span>자산</span><span>현재</span><span>변동</span><span>구분</span></div>` + data.indices.map(i => `<div class="quote-row"><span><b>${i.symbol}</b><br><span class="asset-sub">${i.name}</span></span><span class="value">${i.value}</span><span class="${toneClass(i.tone)}"><b>${i.change}</b></span><span class="mini-meta">${i.session} / ${i.volume}</span></div>`).join("");
