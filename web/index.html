@@ -208,7 +208,10 @@
     body { background: var(--bg); letter-spacing: -.02em; }
     body[data-theme="dark"] { --bg: #111827; --panel: #18212f; --panel2: #202b3a; --line: #2d3a4b; --text: #f5f7fa; --muted: #a8b3c2; --soft: #d2d8e0; }
     body[data-theme="dark"] aside, body[data-theme="dark"] .clock, body[data-theme="dark"] .detail-disclosure { background: #18212f; }
-    body[data-theme="dark"] .focus-stock, body[data-theme="dark"] .guide-step, body[data-theme="dark"] .tile, body[data-theme="dark"] .money-card, body[data-theme="dark"] .info-card { background: #202b3a; }
+    body[data-theme="dark"] .focus-stock, body[data-theme="dark"] .guide-step, body[data-theme="dark"] .tile, body[data-theme="dark"] .money-card, body[data-theme="dark"] .info-card,
+    body[data-theme="dark"] .calendar-event, body[data-theme="dark"] .calendar-grid { background: #202b3a; }
+    body[data-theme="dark"] .calendar-weekday, body[data-theme="dark"] .calendar-day.is-muted { background: #18212f; }
+    body[data-theme="dark"] .calendar-day.has-event { background: #1b2b40; }
     body[data-density="comfortable"] .card { padding: 20px; }
     body[data-density="comfortable"] .row { padding: 13px 0; }
     .shell { grid-template-columns: 214px minmax(0, 1fr); }
@@ -246,6 +249,40 @@
     .overview-list { display: grid; gap: 0; }
     .overview-item { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
     .overview-item:last-child { border-bottom: 0; }
+    .calendar-hero { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; align-items: stretch; }
+    .calendar-alert { display: grid; gap: 10px; align-content: start; min-height: 172px; }
+    .calendar-alert-top { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .calendar-datebox { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 14px; background: #eef6ff; color: #1b64da; font-weight: 950; line-height: 1.05; text-align: center; }
+    .calendar-datebox span { display: block; font-size: 12px; }
+    .calendar-datebox b { display: block; font-size: 22px; }
+    .calendar-alert h2 { margin-bottom: 2px; font-size: 19px; }
+    .calendar-alert-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .calendar-pill { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; background: #f2f6fb; color: var(--soft); font-size: 11px; font-weight: 850; }
+    .calendar-pill.strong { background: #eef6ff; color: #1b64da; }
+    .calendar-board { display: grid; grid-template-columns: 1.05fr .95fr; gap: 14px; align-items: start; margin-top: 14px; }
+    .calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .calendar-month { font-size: 22px; font-weight: 950; letter-spacing: -.06em; }
+    .calendar-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+    .calendar-tab { border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--soft); padding: 7px 10px; font: inherit; font-size: 12px; font-weight: 850; cursor: pointer; }
+    .calendar-tab.active { border-color: #b9dcff; background: #eef6ff; color: #1b64da; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+    .calendar-weekday, .calendar-day { min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .calendar-weekday:nth-child(7n), .calendar-day:nth-child(7n) { border-right: 0; }
+    .calendar-weekday { padding: 9px 4px; background: #fafbfc; color: var(--muted); font-size: 11px; font-weight: 850; text-align: center; }
+    .calendar-day { min-height: 84px; padding: 8px; }
+    .calendar-day:nth-last-child(-n+7) { border-bottom: 0; }
+    .calendar-day.is-muted { background: #fbfcfd; color: #c2c8cf; }
+    .calendar-day-head { display: flex; align-items: center; justify-content: space-between; gap: 5px; font-size: 12px; font-weight: 850; }
+    .calendar-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+    .calendar-day.today .calendar-day-head span:first-child { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #191f28; color: #fff; }
+    .calendar-day.has-event { background: #f8fbff; }
+    .calendar-chip { display: block; margin-top: 7px; padding: 5px 6px; border-radius: 8px; background: #eef6ff; color: #1b64da; font-size: 11px; font-weight: 850; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .calendar-list { display: grid; gap: 8px; }
+    .calendar-event { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; padding: 11px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .calendar-event-date { color: #1b64da; font-size: 12px; font-weight: 950; text-align: center; }
+    .calendar-event-date b { display: block; color: var(--text); font-size: 21px; line-height: 1; }
+    .calendar-event-title { font-weight: 900; line-height: 1.35; }
+    .calendar-event-note { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
     .focus-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .focus-stock { padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: #fafbfc; }
     .focus-stock-top { display: flex; justify-content: space-between; gap: 10px; }
@@ -329,6 +366,10 @@
         grid-template-columns: minmax(0, 1fr);
       }
       .overview-grid { grid-template-columns: minmax(0, 1fr); }
+      .calendar-hero, .calendar-board { grid-template-columns: minmax(0, 1fr); }
+      .calendar-toolbar { display: grid; align-items: start; }
+      .calendar-day { min-height: 64px; padding: 6px; }
+      .calendar-chip { padding: 4px 5px; font-size: 10px; }
       .overview-card.wide, .overview-card.priority { grid-column: auto; }
       .focus-grid, .investment-guide { grid-template-columns: minmax(0, 1fr); }
       .main-board, .right-rail, .card, .list, .row, .tile, .info-card {
@@ -342,7 +383,7 @@
       .asset-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 4px; }
       .asset-row .asset-price { text-align: right; }
       .asset-row .tiny-spark { grid-column: 1 / -1; min-width: 0; }
-      .mobilebar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+      .mobilebar { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
       .mobilebar button { min-width: 0; padding: 11px 2px; font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
     }
   </style>
@@ -374,6 +415,14 @@
         </div>
       </header>
       <section id="dashboard" class="active">
+        <div class="card calendar-hero" style="margin-bottom:14px">
+          <div id="overviewCalendar" class="calendar-alert"></div>
+          <div>
+            <div class="section-head"><h2>자동 수집 캘린더</h2><span class="muted">IPO · 실적 · 배당</span></div>
+            <div id="overviewCalendarList" class="overview-list"></div>
+            <div class="overview-actions"><button class="overview-link" onclick="nav('calendar')">캘린더 열기</button></div>
+          </div>
+        </div>
         <div class="overview-grid">
           <div class="card overview-card wide">
             <div class="section-head"><h2>삼성전자 · SK하이닉스</h2><span class="muted">주요 관심 종목 흐름</span></div>
@@ -466,6 +515,43 @@
           </div>
         </div>
       </section>
+      <section id="calendar">
+        <div class="card">
+          <div class="calendar-toolbar">
+            <div>
+              <div class="page-kicker">IPO COLLECTION</div>
+              <div class="calendar-month" id="calendarMonth">상장 일정 캘린더</div>
+            </div>
+            <div class="calendar-tabs" aria-label="캘린더 필터">
+              <button class="calendar-tab active" type="button" data-calendar-filter="전체" onclick="setCalendarFilter('전체')">전체</button>
+              <button class="calendar-tab" type="button" data-calendar-filter="상장" onclick="setCalendarFilter('상장')">상장</button>
+              <button class="calendar-tab" type="button" data-calendar-filter="청약" onclick="setCalendarFilter('청약')">청약</button>
+              <button class="calendar-tab" type="button" data-calendar-filter="실적" onclick="setCalendarFilter('실적')">실적</button>
+              <button class="calendar-tab" type="button" data-calendar-filter="배당" onclick="setCalendarFilter('배당')">배당</button>
+              <button class="calendar-tab" type="button" data-calendar-filter="시장일정" onclick="setCalendarFilter('시장일정')">시장일정</button>
+            </div>
+          </div>
+          <div class="calendar-hero">
+            <div id="calendarFeatured" class="calendar-alert"></div>
+            <div class="tile">
+              <h3>수집 상태</h3>
+              <p class="muted" id="calendarSource">상장/IPO 수집 자동 표시</p>
+              <div class="overview-item"><span>알림 방식</span><b>상단 카드 · 일정 목록</b></div>
+              <div class="overview-item"><span>검증 기준</span><b>거래소/공시 재확인</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="calendar-board">
+          <div class="card">
+            <div class="section-head"><h2>월간 보기</h2><span class="muted">일반 달력 기능</span></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+          </div>
+          <div class="card">
+            <div class="section-head"><h2>수집된 일정</h2><span class="muted">상장 · 청약 · 시장일정</span></div>
+            <div id="calendarEvents" class="calendar-list"></div>
+          </div>
+        </div>
+      </section>
       <section id="notifications">
         <div class="card coming-soon"><div><b>알림 기능 준비중</b><p class="muted">시장 위험 신호와 주요 일정 알림은 추후 제공할 예정입니다.</p></div></div>
       </section>
@@ -482,16 +568,19 @@
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈"],["investment","투자"],["reports","리포트"],["family","가족 플랜"],["taeri","태리 키우기"],["notifications","알림"],["settings","설정"]];
+    const views = [["dashboard","홈"],["investment","투자"],["reports","리포트"],["family","가족 플랜"],["taeri","태리 키우기"],["calendar","캘린더"],["notifications","알림"],["settings","설정"]];
     const viewMeta = {
-      dashboard: ["MarketFlow Overview", "오늘의 Overview", "시장, 가족 자금, 알림에서 지금 확인할 내용을 한 화면에 모았습니다."],
+      dashboard: ["MarketFlow Overview", "Overview", "시장, 가족 자금, 알림에서 지금 확인할 내용을 한 화면에 모았습니다."],
       investment: ["Investment", "투자", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 자세히 확인합니다."],
       reports: ["Reports", "리포트", "Daily Report와 SMS 브리프 내용을 확인합니다."],
       notifications: ["Notifications", "알림", "시장 위험 신호와 주요 일정 알림은 추후 제공할 예정입니다."],
+      calendar: ["Calendar", "캘린더", "상장, 청약, 실적, 배당 등 주요 시장 일정을 자동 수집해 표시합니다."],
       settings: ["Settings", "설정", "사이트의 기본 화면 표시 방식을 설정합니다."],
       family: ["Family Plan", "가족 플랜", "우리 가족 자금 상황과 주택 매매 목표를 계산합니다."],
       taeri: ["Taeri Care", "태리 키우기", "태리의 어린이집 생활, 건강, 지원제도 체크포인트를 모읍니다."],
     };
+    let currentCalendar = null;
+    let currentCalendarFilter = "전체";
     const toneClass = t => t === "up" ? "up" : t === "down" ? "down" : t === "warn" ? "warn" : "flat";
     function formatKst(value, options) {
       return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
@@ -571,6 +660,81 @@
     function parseWon(value) {
       return Number(String(value || "").replace(/[^\\d]/g, "")) || 0;
     }
+    function calendarDayLabel(dateText) {
+      const date = new Date(`${dateText}T00:00:00+09:00`);
+      return {
+        month: `${date.getMonth() + 1}월`,
+        day: String(date.getDate()),
+        weekday: new Intl.DateTimeFormat("ko-KR", { weekday: "short", timeZone: "Asia/Seoul" }).format(date),
+        short: `${date.getMonth() + 1}/${date.getDate()}`,
+      };
+    }
+    function renderCalendarAlert(event) {
+      if (!event) return `<p class="muted">수집된 상장 일정이 없습니다.</p>`;
+      const label = calendarDayLabel(event.date);
+      return `<div class="calendar-alert-top"><div><div class="calendar-alert-meta"><span class="calendar-pill strong">${event.category}</span><span class="calendar-pill">${event.market}</span><span class="calendar-pill">${event.status}</span></div><h2>${event.title}</h2><p class="muted">${event.company} · ${event.note}</p></div><div class="calendar-datebox"><span>${label.month}</span><b>${label.day}</b><span>${label.weekday}</span></div></div>`;
+    }
+    function filteredCalendarEvents(calendar) {
+      const events = calendar?.events || [];
+      return currentCalendarFilter === "전체" ? events : events.filter(event => event.category === currentCalendarFilter);
+    }
+    function setCalendarFilter(filter) {
+      currentCalendarFilter = filter;
+      document.querySelectorAll("[data-calendar-filter]").forEach(button => button.classList.toggle("active", button.dataset.calendarFilter === filter));
+      if (currentCalendar) renderListingCalendar(currentCalendar);
+    }
+    function renderCalendarGrid(calendar, visibleEvents) {
+      const events = visibleEvents || filteredCalendarEvents(calendar);
+      const [year, month] = String(calendar?.month || "2026-06").split("-").map(Number);
+      const first = new Date(year, month - 1, 1);
+      const start = new Date(first);
+      start.setDate(first.getDate() - first.getDay());
+      const eventByDay = events.reduce((acc, event) => {
+        const day = Number(event.date.slice(-2));
+        acc[day] = acc[day] || [];
+        acc[day].push(event);
+        return acc;
+      }, {});
+      const today = new Date();
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"].map(day => `<div class="calendar-weekday">${day}</div>`).join("");
+      const days = Array.from({ length: 42 }, (_, index) => {
+        const current = new Date(start);
+        current.setDate(start.getDate() + index);
+        const inMonth = current.getMonth() === month - 1;
+        const date = current.getDate();
+        const items = inMonth ? (eventByDay[date] || []) : [];
+        const isToday = current.toDateString() === today.toDateString();
+        return `<div class="calendar-day ${inMonth ? "" : "is-muted"} ${items.length ? "has-event" : ""} ${isToday ? "today" : ""}"><div class="calendar-day-head"><span>${date}</span>${items.length ? '<span class="calendar-dot"></span>' : ""}</div>${items.slice(0, 2).map(item => `<span class="calendar-chip">${item.company}</span>`).join("")}</div>`;
+      }).join("");
+      return weekdays + days;
+    }
+    function renderListingCalendar(calendar) {
+      if (!calendar) return;
+      currentCalendar = calendar;
+      const allEvents = calendar.events || [];
+      const events = filteredCalendarEvents(calendar);
+      document.querySelectorAll("[data-calendar-filter]").forEach(button => button.classList.toggle("active", button.dataset.calendarFilter === currentCalendarFilter));
+      const featured = events.find(e => e.priority === "high") || events[0];
+      const monthLabel = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", timeZone: "Asia/Seoul" }).format(new Date(`${calendar.month || "2026-06"}-01T00:00:00+09:00`));
+      const summaryHtml = renderCalendarAlert(featured);
+      const overview = document.getElementById("overviewCalendar");
+      if (overview) overview.innerHTML = summaryHtml;
+      const overviewList = document.getElementById("overviewCalendarList");
+      if (overviewList) overviewList.innerHTML = allEvents.slice(0, 3).map(event => `<div class="overview-item"><span>${calendarDayLabel(event.date).short} ${event.company}</span><b>${event.category}</b></div>`).join("");
+      const featuredMount = document.getElementById("calendarFeatured");
+      if (featuredMount) featuredMount.innerHTML = summaryHtml;
+      const monthMount = document.getElementById("calendarMonth");
+      if (monthMount) monthMount.textContent = `${monthLabel} 상장 일정`;
+      const sourceMount = document.getElementById("calendarSource");
+      if (sourceMount) sourceMount.textContent = `${calendar.source || "자동 수집"} · ${formatKst(new Date(calendar.updated_at || Date.now()), { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} 갱신`;
+      const grid = document.getElementById("calendarGrid");
+      if (grid) grid.innerHTML = renderCalendarGrid(calendar, events);
+      const list = document.getElementById("calendarEvents");
+      if (list) list.innerHTML = events.map(event => {
+        const label = calendarDayLabel(event.date);
+        return `<div class="calendar-event"><div class="calendar-event-date">${label.month}<b>${label.day}</b>${label.weekday}</div><div><div class="calendar-alert-meta"><span class="calendar-pill strong">${event.category}</span><span class="calendar-pill">${event.market}</span><span class="calendar-pill">${event.status}</span></div><div class="calendar-event-title">${event.title}</div><div class="calendar-event-note">${event.company} · ${event.note}</div></div></div>`;
+      }).join("") || `<p class="muted">선택한 분류의 일정이 없습니다.</p>`;
+    }
     function renderFamilyPlan(plan) {
       if (!plan) return;
       const goalHtml = plan.goals.map(g => {
@@ -642,6 +806,7 @@
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
       renderFamilyPlan(data.family_plan);
       renderTaeriPlan(data.taeri_plan);
+      renderListingCalendar(data.listing_calendar);
       renderOverview(data);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
