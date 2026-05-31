@@ -142,7 +142,7 @@ func fetchSECCalendarEvents() ([]CalendarEvent, error) {
 func secCompanyName(title string) string {
 	title = strings.TrimSpace(title)
 	if idx := strings.Index(title, " - "); idx > 0 {
-		return strings.TrimSpace(title[:idx])
+		title = strings.TrimSpace(title[idx+3:])
 	}
 	if idx := strings.Index(title, "("); idx > 0 {
 		return strings.TrimSpace(title[:idx])
