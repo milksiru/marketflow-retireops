@@ -89,3 +89,11 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "deploy: ${GITHUB_SHA::12} [skip ci]"
           git push
+
+      - name: Refresh Argo CD application
+        shell: bash
+        run: |
+          set -euo pipefail
+          kubectl -n argocd annotate application marketflow-retireops \
+            argocd.argoproj.io/refresh=hard \
+            --overwrite
