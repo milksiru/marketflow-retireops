@@ -145,7 +145,8 @@ class Handler(BaseHTTPRequestHandler):
     body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: var(--bg); color: var(--text); }
     .shell { display: grid; grid-template-columns: 188px minmax(0, 1fr); min-height: 100vh; }
     aside { border-right: 1px solid var(--line); padding: 22px 14px 48px; background: rgba(255,255,255,.86); position: sticky; top: 0; height: 100dvh; overflow-y: auto; scrollbar-gutter: stable; backdrop-filter: blur(14px); }
-    .brand { font-weight: 850; font-size: 18px; margin: 2px 8px 22px; color: var(--text); }
+    .brand { display: block; width: calc(100% - 16px); border: 0; background: transparent; padding: 0; font: inherit; font-weight: 850; font-size: 18px; margin: 2px 8px 22px; color: var(--text); text-align: left; cursor: pointer; }
+    .brand:hover { color: var(--blue); }
     nav button { display: block; width: 100%; margin: 3px 0; padding: 11px 12px; border: 0; border-radius: 8px; text-align: left; color: var(--soft); background: transparent; cursor: pointer; font-weight: 700; }
     nav button.active, nav button:hover { background: #eef6ff; color: var(--blue); }
     main { padding: 26px 28px 92px; max-width: 1060px; width: 100%; margin: 0 auto; }
@@ -317,7 +318,7 @@ class Handler(BaseHTTPRequestHandler):
 <body>
   <div class="shell">
     <aside>
-      <div class="brand">MarketFlow RetireOps</div>
+      <button class="brand" onclick="goHome()">MarketFlow RetireOps</button>
       <nav id="sideNav"></nav>
     </aside>
     <main>
@@ -453,6 +454,11 @@ class Handler(BaseHTTPRequestHandler):
     function nav(target) {
       document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === target));
       document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("active", b.dataset.nav === target));
+    }
+    async function goHome() {
+      nav("dashboard");
+      await loadDashboard();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     function renderNav() {
       for (const mount of [document.getElementById("sideNav"), document.getElementById("mobileNav")]) {
