@@ -393,6 +393,7 @@ class Handler(BaseHTTPRequestHandler):
             <div class="card"><h2>실행 순서</h2><div id="familyStepsPage" class="step-list"></div></div>
           </div>
           <div class="grid">
+            <div class="card"><div class="section-head"><h2>왕숙2 A4 본청약</h2><span class="muted">우선 시나리오</span></div><div id="familyPresale"></div></div>
             <div class="card"><h2>자산</h2><div id="familyAssets" class="finance-list"></div></div>
             <div class="card"><h2>부채</h2><div id="familyDebts" class="finance-list"></div></div>
           </div>
@@ -539,11 +540,13 @@ class Handler(BaseHTTPRequestHandler):
       const steps = document.getElementById("familySteps");
       if (steps) steps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
       const overview = document.getElementById("familyOverview");
-      if (overview) overview.innerHTML = `<div class="money-grid">${plan.metrics.map(m => `<div class="money-card"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div><p class="muted" style="margin-top:14px">${plan.summary}</p><div class="presale-card"><div class="presale-top"><div><div class="presale-title">${plan.presale.title}</div><div class="presale-meta">${plan.presale.notice}<br>${plan.presale.expected}</div></div><span class="presale-status">${plan.presale.status}</span></div><p class="presale-meta">${plan.presale.plan}</p><div class="presale-list">${plan.presale.focus.map(f => `<div>${f}</div>`).join("")}</div><p class="presale-meta">${plan.presale.note}</p></div>`;
+      if (overview) overview.innerHTML = `<div class="money-grid">${plan.metrics.map(m => `<div class="money-card"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div><p class="muted" style="margin-top:14px">${plan.summary}</p>`;
       const assets = document.getElementById("familyAssets");
       if (assets) assets.innerHTML = plan.assets.map(a => `<div class="row"><span>${a.label}</span><b>${a.value}</b></div>`).join("");
       const debts = document.getElementById("familyDebts");
       if (debts) debts.innerHTML = plan.debts.map(d => `<div class="row"><span>${d.label}</span><b class="warn">${d.value}</b></div>`).join("");
+      const presale = document.getElementById("familyPresale");
+      if (presale) presale.innerHTML = `<div class="presale-card" style="margin-top:0"><div class="presale-top"><div><div class="presale-title">${plan.presale.title}</div><div class="presale-meta">${plan.presale.notice}<br>${plan.presale.expected}</div></div><span class="presale-status">${plan.presale.status}</span></div><p class="presale-meta">${plan.presale.plan}</p><div class="presale-list">${plan.presale.focus.map(f => `<div>${f}</div>`).join("")}</div><p class="presale-meta">${plan.presale.note}</p></div>`;
       const familyGoals = document.getElementById("familyGoalsPage");
       if (familyGoals) familyGoals.innerHTML = goalHtml;
       const familySteps = document.getElementById("familyStepsPage");
