@@ -10,7 +10,7 @@ Pushes to `main` are built by the workstation self-hosted runner and deployed th
 push to main
 -> GitHub Actions self-hosted runner on workstation
 -> podman build
--> 192.168.55.148:5000/milksiru/marketflow-retireops:<git-sha>
+-> <internal-registry>/milksiru/marketflow-retireops:<git-sha>
 -> deploy/k8s/deployment.yaml update
 -> Argo CD sync
 -> Kubernetes rollout
@@ -60,7 +60,7 @@ KAKAO_SENDER_KEY
 KAKAO_TEMPLATE_CODE
 ```
 
-Update them on workstation:
+Update them through the cluster secret management flow:
 
 ```bash
 kubectl -n apps edit secret marketflow-retireops-secrets
@@ -69,7 +69,7 @@ kubectl -n apps edit secret marketflow-retireops-secrets
 Channel settings are managed through:
 
 ```bash
-curl -X PUT http://192.168.55.42:31081/api/notifications/channels/telegram/settings \
+curl -X PUT <service-url>/api/notifications/channels/telegram/settings \
   -H 'Content-Type: application/json' \
   -d '{"enabled":true,"provider":"bot","config":{}}'
 ```
@@ -116,7 +116,7 @@ Analysis pipeline:
 Run the full MVP flow manually:
 
 ```bash
-curl -X POST http://192.168.55.42:31081/api/analyze/run \
+curl -X POST <service-url>/api/analyze/run \
   -H 'Content-Type: application/json' \
   -d '{"provider":"mock"}'
 ```
@@ -158,7 +158,7 @@ NAVER_SENS_SERVICE_ID=replace-me
 Test SMS:
 
 ```bash
-curl -X POST http://192.168.55.42:31081/api/notifications/sms/test \
+curl -X POST <service-url>/api/notifications/sms/test \
   -H 'Content-Type: application/json' \
   -d '{"recipient":"01012345678"}'
 ```
@@ -166,13 +166,13 @@ curl -X POST http://192.168.55.42:31081/api/notifications/sms/test \
 Check delivery failures:
 
 ```bash
-curl http://192.168.55.42:31081/api/notifications
+curl <service-url>/api/notifications
 ```
 
 Create or update a report subscription:
 
 ```bash
-curl -X POST http://192.168.55.42:31081/api/subscriptions \
+curl -X POST <service-url>/api/subscriptions \
   -H 'Content-Type: application/json' \
   -d '{"report_type":"morning","channel_type":"sms","recipient":"010-0000-0000","send_time":"07:30","timezone":"Asia/Seoul"}'
 ```
