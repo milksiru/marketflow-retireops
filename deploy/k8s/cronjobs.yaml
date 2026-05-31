@@ -13,7 +13,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: collector
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "collect"]
               envFrom:
                 - secretRef:
@@ -41,7 +41,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: analyzer
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "analyze"]
               envFrom:
                 - secretRef:
@@ -69,7 +69,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: daily-report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "daily-report"]
               envFrom:
                 - secretRef:
@@ -97,7 +97,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sms-report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "send-sms-report"]
               envFrom:
                 - secretRef:
@@ -125,7 +125,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sms-weekly-report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "send-sms-report"]
               envFrom:
                 - secretRef:
@@ -153,7 +153,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: sms-risk-alert
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "send-risk-alert"]
               envFrom:
                 - secretRef:
@@ -181,7 +181,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "morning"]
               envFrom:
                 - secretRef:
@@ -209,7 +209,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "market-open"]
               envFrom:
                 - secretRef:
@@ -237,7 +237,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "evening"]
               envFrom:
                 - secretRef:
@@ -265,7 +265,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "weekly"]
               envFrom:
                 - secretRef:
@@ -293,7 +293,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: report
-              image: 192.168.55.148:5000/milksiru/marketflow-retireops:7b9820eb277b
+              image: 192.168.55.148:5000/milksiru/marketflow-retireops:9a139d48794c
               command: ["python", "-m", "app.jobs", "monthly-dc"]
               envFrom:
                 - secretRef:
