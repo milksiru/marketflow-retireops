@@ -34,6 +34,9 @@ func TestFamilyPlanIncludesPresale(t *testing.T) {
 	if plan["presale"] == nil {
 		t.Fatal("family plan must include presale guidance")
 	}
+	if metrics := plan["metrics"].([]map[string]any); len(metrics) != 6 {
+		t.Fatalf("family plan must expose six summary metrics, got %d", len(metrics))
+	}
 }
 
 func TestMemorySubscriptionUpsert(t *testing.T) {

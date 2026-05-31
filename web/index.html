@@ -214,10 +214,8 @@
     .brand-copy small { color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .02em; }
     .nav-label { margin: 0 10px 8px; color: #b0b8c1; font-size: 10px; font-weight: 850; letter-spacing: .08em; }
     nav { display: grid; gap: 2px; }
-    nav button { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 11px; border-radius: 10px; color: #4e5968; font-size: 14px; font-weight: 720; letter-spacing: -.03em; }
+    nav button { display: flex; align-items: center; margin: 0; padding: 10px 11px; border-radius: 10px; color: #4e5968; font-size: 14px; font-weight: 720; letter-spacing: -.03em; }
     nav button.active, nav button:hover { background: #f2f6fb; color: #1b64da; }
-    .nav-icon { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 7px; background: #f2f4f6; color: #8b95a1; font-size: 11px; font-weight: 900; }
-    nav button.active .nav-icon { background: #e8f3ff; color: #3182f6; }
     .sidebar-foot { margin: 22px 4px 0; padding: 13px 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.55; }
     main { max-width: 1500px; padding: 22px 28px 72px; }
     header { min-height: 0; margin-bottom: 14px; align-items: center; }
@@ -272,7 +270,6 @@
       .card { border-radius: 12px; padding: 14px; }
       .hero-mood { min-height: 0; }
       .mobilebar button { font-size: 12px; }
-      .mobilebar .nav-icon { display: none; }
     }
   </style>
 </head>
@@ -302,13 +299,7 @@
           <button class="primary" onclick="sendTest()">SMS 테스트 발송</button>
         </div>
       </header>
-      <div class="workspace-bar">
-        <span class="workspace-chip active"><i></i> 실시간 마켓</span>
-        <span class="workspace-chip">관심 ETF</span>
-        <span class="workspace-chip">DC 리밸런싱</span>
-        <span class="workspace-chip">가족 자금 계획</span>
-        <span class="workspace-chip">뉴스 근거</span>
-      </div>
+      <div class="workspace-bar" id="workspaceBar"></div>
       <section id="dashboard" class="active">
         <div class="dashboard-shell">
           <div class="main-board">
@@ -396,7 +387,15 @@
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈","H"],["reports","리포트","R"],["notifications","알림","N"],["settings","설정","S"],["family","가족 플랜","F"],["taeri","태리 키우기","T"]];
+    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"],["family","가족 플랜"],["taeri","태리 키우기"]];
+    const workspaceGroups = {
+      dashboard: ["실시간 마켓", "관심 ETF", "DC 리밸런싱", "시장 알림", "뉴스 근거"],
+      reports: ["오전 브리핑", "개장 전 체크", "마감 브리핑", "주간 리포트", "월간 DC"],
+      notifications: ["발송 현황", "채널 설정", "최근 발송 로그"],
+      settings: ["리포트 구독", "SMS 발송 설정", "수신자 관리"],
+      family: ["자금 현황", "자산·부채", "목표 진행률", "실행 순서", "왕숙2 A4"],
+      taeri: ["성장 체크포인트", "이번 달 할 일", "건강 일정", "지원제도", "참고 출처"],
+    };
     const viewMeta = {
       dashboard: ["MarketFlow Live Desk", "오늘의 시장 흐름", "시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다."],
       reports: ["Reports", "리포트", "Daily Report와 SMS 브리프 내용을 확인합니다."],
@@ -450,6 +449,7 @@
       document.getElementById("pageKicker").textContent = meta[0];
       document.getElementById("pageTitle").textContent = meta[1];
       document.getElementById("pageSubtitle").textContent = meta[2];
+      renderWorkspace(target);
     }
     async function goHome() {
       nav("dashboard");
@@ -458,9 +458,13 @@
     }
     function renderNav() {
       for (const mount of [document.getElementById("sideNav"), document.getElementById("mobileNav")]) {
-        mount.innerHTML = views.map(([id,label,icon]) => `<button data-nav="${id}" onclick="nav('${id}')"><span class="nav-icon">${icon}</span>${label}</button>`).join("");
+        mount.innerHTML = views.map(([id,label]) => `<button data-nav="${id}" onclick="nav('${id}')">${label}</button>`).join("");
       }
       document.querySelectorAll('[data-nav="dashboard"]').forEach(b => b.classList.add("active"));
+    }
+    function renderWorkspace(target="dashboard") {
+      const items = workspaceGroups[target] || workspaceGroups.dashboard;
+      document.getElementById("workspaceBar").innerHTML = items.map((label, index) => `<span class="workspace-chip ${index === 0 ? "active" : ""}">${index === 0 ? "<i></i>" : ""}${label}</span>`).join("");
     }
     function spark(points, tone) {
       const max = Math.max(...points);
@@ -575,7 +579,7 @@
       await loadNotifications();
       nav("notifications");
     }
-    renderNav(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports(); loadNotifications(); loadSubscriptions();
+    renderNav(); renderWorkspace(); tickClock(); setInterval(tickClock, 1000); loadDashboard(); setInterval(loadDashboard, 30000); loadReports(); loadNotifications(); loadSubscriptions();
   </script>
 </body>
 </html>
