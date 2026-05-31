@@ -235,7 +235,7 @@ func (p *postgresStore) LatestPrices() ([]MarketPrice, error) {
 	return out, r.Err()
 }
 func (p *postgresStore) InsertScore(v MarketScore) error {
-	_, e := p.db.Exec(`insert into market_scores(score_date,market_mood,risk_score,risk_level,summary) values($1,$2,$3,$4,$5)`, v.ScoreDate, v.MarketMood, v.RiskScore, v.RiskLevel, v.Summary)
+	_, e := p.db.Exec(`insert into market_scores(time,score_date,market_mood,risk_score,risk_level,summary) values(now(),$1,$2,$3,$4,$5)`, v.ScoreDate, v.MarketMood, v.RiskScore, v.RiskLevel, v.Summary)
 	return e
 }
 func (p *postgresStore) LatestScore() (*MarketScore, error) {
