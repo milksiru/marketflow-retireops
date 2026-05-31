@@ -500,7 +500,8 @@
       const debts = document.getElementById("familyDebts");
       if (debts) debts.innerHTML = plan.debts.map(d => `<div class="row"><span>${d.label}</span><b class="warn">${d.value}</b></div>`).join("");
       const presale = document.getElementById("familyPresale");
-      if (presale) presale.innerHTML = `<div class="presale-card" style="margin-top:0"><div class="presale-top"><div><div class="presale-title">${plan.presale.title}</div><div class="presale-meta">${plan.presale.notice}<br>${plan.presale.expected}</div></div><span class="presale-status">${plan.presale.status}</span></div><p class="presale-meta">${plan.presale.plan}</p><div class="presale-list">${plan.presale.focus.map(f => `<div>${f}</div>`).join("")}</div><p class="presale-meta">${plan.presale.note}</p></div>`;
+      if (presale && plan.presale) presale.innerHTML = `<div class="presale-card" style="margin-top:0"><div class="presale-top"><div><div class="presale-title">${plan.presale.title}</div><div class="presale-meta">${plan.presale.notice}<br>${plan.presale.expected}</div></div><span class="presale-status">${plan.presale.status}</span></div><p class="presale-meta">${plan.presale.plan}</p><div class="presale-list">${(plan.presale.focus || []).map(f => `<div>${f}</div>`).join("")}</div><p class="presale-meta">${plan.presale.note}</p></div>`;
+      else if (presale) presale.innerHTML = `<p class="muted">본청약 계획 정보가 아직 등록되지 않았습니다.</p>`;
       const familyGoals = document.getElementById("familyGoalsPage");
       if (familyGoals) familyGoals.innerHTML = goalHtml;
       const familySteps = document.getElementById("familyStepsPage");

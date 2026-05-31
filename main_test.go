@@ -29,6 +29,13 @@ func TestFormatPrice(t *testing.T) {
 	}
 }
 
+func TestFamilyPlanIncludesPresale(t *testing.T) {
+	plan := familyPlan(map[string]int64{})
+	if plan["presale"] == nil {
+		t.Fatal("family plan must include presale guidance")
+	}
+}
+
 func TestMemorySubscriptionUpsert(t *testing.T) {
 	store := newMemoryStore()
 	first, _ := store.UpsertSubscription(map[string]any{"recipient": "01012345678", "send_time": "07:30"})
