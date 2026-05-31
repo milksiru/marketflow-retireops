@@ -77,6 +77,57 @@ curl -X PUT <service-url>/api/notifications/channels/telegram/settings \
 
 Secrets stay in Kubernetes Secret only. Provider config in the DB is for non-sensitive routing options.
 
+## Google OAuth Login
+
+MarketFlow is protected at the Kubernetes Ingress layer with oauth2-proxy and Google OIDC. The Go app does not perform the login flow itself; it reads the authenticated user from these headers forwarded by ingress-nginx:
+
+```text
+X-Auth-Request-Email
+X-Auth-Request-User
+```
+
+The current manifests allow only these Google accounts through `deploy/k8s/oauth2-proxy.yaml`:
+
+```text
+3siksfather@gmail.com
+pjy3984@gmail.com
+```
+
+Before applying, mirror the oauth2-proxy image on the workstation because cluster workloads use the internal registry:
+
+```bash
+podman pull quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
+podman tag quay.io/oauth2-proxy/oauth2-proxy:v7.15.2 192.168.55.148:5000/oauth2-proxy/oauth2-proxy:v7.15.2
+podman push --tls-verify=false 192.168.55.148:5000/oauth2-proxy/oauth2-proxy:v7.15.2
+```
+
+Set the real Google OAuth values directly in the cluster secret. Do not commit real values:
+
+```bash
+kubectl -n marketflow create secret generic oauth2-proxy-secret \
+  --from-literal=client-id='<google-client-id>' \
+  --from-literal=client-secret='<google-client-secret>' \
+  --from-literal=cookie-secret='<32-byte-base64-secret>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Google OAuth redirect URI:
+
+```text
+https://marketflow.nas-3siks.synology.me/oauth2/callback
+```
+
+Apply and verify from the workstation:
+
+```bash
+kubectl apply -f deploy/k8s/
+kubectl -n marketflow get pod,svc,ingress
+kubectl -n marketflow logs deploy/oauth2-proxy
+curl -I https://marketflow.nas-3siks.synology.me/
+curl -I https://marketflow.nas-3siks.synology.me/oauth2/start
+curl https://marketflow.nas-3siks.synology.me/api/auth/me
+```
+
 ## Local API
 
 ```bash

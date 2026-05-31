@@ -149,6 +149,15 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 		return
 	}
+	if r.URL.Path == "/api/auth/me" && r.Method == http.MethodGet {
+		email, user := authUserFromHeaders(r)
+		writeJSON(w, http.StatusOK, map[string]any{
+			"authenticated": email != "" || user != "",
+			"email":         email,
+			"user":          user,
+		})
+		return
+	}
 	payload := map[string]any{}
 	if r.Body != nil && r.Method != http.MethodGet {
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil && !errors.Is(err, io.EOF) {
@@ -579,6 +588,9 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
+}
+func authUserFromHeaders(r *http.Request) (string, string) {
+	return r.Header.Get("X-Auth-Request-Email"), r.Header.Get("X-Auth-Request-User")
 }
 func env(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
