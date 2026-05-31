@@ -29,6 +29,19 @@ func TestFormatPrice(t *testing.T) {
 	}
 }
 
+func TestMoneyUsesReadableKoreanUnits(t *testing.T) {
+	tests := map[int64]string{
+		91330000:  "9,133만원",
+		600000000: "6억원",
+		613300000: "6억 1,330만원",
+	}
+	for value, want := range tests {
+		if got := money(value); got != want {
+			t.Fatalf("money(%d) returned %q, want %q", value, got, want)
+		}
+	}
+}
+
 func TestFamilyPlanIncludesPresale(t *testing.T) {
 	plan := familyPlan(map[string]int64{})
 	if plan["presale"] == nil {

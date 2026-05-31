@@ -225,9 +225,10 @@
     .page-kicker { margin-bottom: 5px; color: #3182f6; font-size: 12px; letter-spacing: -.02em; }
     .header-copy p { margin-top: 6px; font-size: 13px; }
     .header-actions { align-items: center; }
-    .clock { min-width: 260px; padding: 10px 12px; border: 0; border-radius: 12px; background: #f7f8fa; }
-    .clock-time { font-size: 23px; letter-spacing: -.04em; }
-    .clock-date, .clock-meta, .source-meta { font-size: 11px; }
+    .clock { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; padding: 0; border: 0; background: transparent; white-space: nowrap; }
+    .clock-time { font-size: 14px; font-weight: 900; letter-spacing: -.02em; }
+    .clock-date, .clock-meta { color: var(--muted); font-size: 11px; }
+    .source-meta, .sessions { display: none; }
     .primary { padding: 10px 13px; border-radius: 10px; box-shadow: none; font-size: 13px; }
     .workspace-bar { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); overflow-x: auto; }
     .workspace-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; color: var(--soft); background: #fff; font-size: 12px; font-weight: 750; white-space: nowrap; }
@@ -242,6 +243,20 @@
     .overview-list { display: grid; gap: 0; }
     .overview-item { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
     .overview-item:last-child { border-bottom: 0; }
+    .focus-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .focus-stock { padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: #fafbfc; }
+    .focus-stock-top { display: flex; justify-content: space-between; gap: 10px; }
+    .focus-stock-price { margin-top: 8px; font-size: 22px; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .focus-stock .spark { height: 32px; margin-top: 7px; }
+    .investment-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .guide-step { padding: 13px; border: 1px solid #d6e9ff; border-radius: 12px; background: #f8fbff; }
+    .guide-step b { display: block; color: #1b64da; font-size: 12px; margin-bottom: 5px; }
+    .guide-step span { color: var(--soft); font-size: 13px; line-height: 1.45; }
+    .detail-disclosure { margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .detail-disclosure > summary { padding: 13px 16px; color: #1b64da; cursor: pointer; font-size: 13px; font-weight: 850; }
+    .detail-disclosure[open] > summary { border-bottom: 1px solid var(--line); }
+    .detail-body { padding: 14px; }
+    .bounded-list { max-height: 310px; overflow-y: auto; padding-right: 4px; }
     .dashboard-shell { grid-template-columns: minmax(0, 1fr) 292px; gap: 18px; }
     .main-board, .right-rail { gap: 12px; }
     .right-rail { top: 14px; }
@@ -306,6 +321,7 @@
       }
       .overview-grid { grid-template-columns: minmax(0, 1fr); }
       .overview-card.wide { grid-column: auto; }
+      .focus-grid, .investment-guide { grid-template-columns: minmax(0, 1fr); }
       .main-board, .right-rail, .card, .list, .row, .tile, .info-card {
         min-width: 0;
         max-width: 100%;
@@ -339,9 +355,10 @@
         </div>
         <div class="header-actions">
           <div class="clock">
-            <div class="clock-top"><div class="clock-date" id="clockDate">KST</div><div class="live">LIVE</div></div>
+            <div class="live">LIVE</div>
+            <div class="clock-date" id="clockDate">KST</div>
             <div class="clock-time" id="clockTime">--:--:--</div>
-            <div class="clock-meta" id="dataAsOf">데이터 기준 확인 중</div>
+            <div class="clock-meta" id="dataAsOf">데이터 확인 중</div>
             <div class="source-meta" id="sourceMeta">실시간 수집 대기</div>
             <div class="sessions" id="sessions"></div>
           </div>
@@ -352,12 +369,12 @@
       <section id="dashboard" class="active">
         <div class="overview-grid">
           <div class="card overview-card wide">
-            <div class="section-head"><h2>오늘의 Overview</h2><span class="muted">한눈에 보는 핵심 요약</span></div>
-            <div id="overviewMood"></div>
+            <div class="section-head"><h2>삼성전자 · SK하이닉스</h2><span class="muted">주요 관심 종목 흐름</span></div>
+            <div id="overviewFocus" class="focus-grid"></div>
             <div class="overview-actions"><button class="overview-link" onclick="nav('investment')">투자 상세 보기</button><button class="overview-link" onclick="nav('reports')">리포트 보기</button></div>
           </div>
           <div class="card overview-card">
-            <div class="section-head"><h2>가족 자금</h2><span class="muted">주거 목표 기준</span></div>
+            <div class="section-head"><h2>가족 플랜</h2><span class="muted">금액은 상세 화면에서 확인</span></div>
             <div id="overviewFamily"></div>
             <div class="overview-actions"><button class="overview-link" onclick="nav('family')">가족 플랜 보기</button></div>
           </div>
@@ -378,14 +395,22 @@
         </div>
       </section>
       <section id="investment">
-        <div class="dashboard-shell">
+        <div class="investment-guide">
+          <div class="guide-step"><b>1. 관심 종목</b><span>삼성전자와 SK하이닉스의 가격과 흐름을 먼저 확인합니다.</span></div>
+          <div class="guide-step"><b>2. 위험 신호</b><span>환율, 금리, 변동성 알림이 함께 높아지는지 점검합니다.</span></div>
+          <div class="guide-step"><b>3. 비중 판단</b><span>한 번에 추격하지 않고 DC 목표 비중과 신규 납입금 기준으로 검토합니다.</span></div>
+        </div>
+        <div class="card"><div class="section-head"><h2>우선 확인 종목</h2><span class="muted">국내 반도체 관심 종목</span></div><div id="focusTradeBoard" class="asset-table"></div></div>
+        <details class="detail-disclosure">
+          <summary>시장 상세 데이터 펼쳐보기</summary>
+          <div class="detail-body dashboard-shell">
           <div class="main-board">
             <div class="market-overview">
               <div class="card hero-mood"><div class="section-head"><h2>시장 상태</h2><span class="muted">실시간 데이터 기반</span></div><div id="mood" class="mood"></div></div>
               <div class="card brief-card"><div class="section-head"><h2>오늘의 체크포인트</h2><span class="muted">요약</span></div><div id="brief" class="list"></div></div>
             </div>
             <div class="card"><div class="section-head"><h2>글로벌 마켓</h2><span class="muted">지수 / 금리 / 환율 / 변동성</span></div><div id="indices" class="quote-table"></div></div>
-            <div class="card"><div class="section-head"><h2>주요 종목 모니터</h2><span class="muted">가격, 변동률, 신호</span></div><div id="tradeBoard" class="asset-table"></div></div>
+            <div class="card"><div class="section-head"><h2>전체 종목 모니터</h2><span class="muted">가격, 변동률, 신호</span></div><div id="tradeBoard" class="asset-table bounded-list"></div></div>
             <div class="grid two">
               <div class="card"><h2>관심 ETF</h2><div id="watchlist" class="list"></div></div>
               <div class="card"><h2>DC 퇴직연금</h2><div id="dc"></div></div>
@@ -396,12 +421,13 @@
             </div>
           </div>
           <div class="right-rail">
-            <div class="card"><div class="section-head"><h2>실시간 랭킹</h2><span class="muted">변동률 기준</span></div><div id="ranking" class="list"></div></div>
+            <div class="card"><div class="section-head"><h2>실시간 랭킹</h2><span class="muted">변동률 기준</span></div><div id="ranking" class="list bounded-list"></div></div>
             <div class="card"><div class="section-head"><h2>가족 실행 플랜</h2><span class="muted">주택 목표</span></div><div id="familySteps" class="step-list"></div></div>
-            <div class="card"><div class="section-head"><h2>뉴스 근거</h2><span class="muted">출처와 링크</span></div><div id="newsRefs" class="list"></div></div>
+            <div class="card"><div class="section-head"><h2>뉴스 근거</h2><span class="muted">출처와 링크</span></div><div id="newsRefs" class="list bounded-list"></div></div>
             <div class="card"><h2>데이터 메모</h2><p class="muted">표시된 분석은 투자 참고 신호이며 자동 매수/매도 판단이 아닙니다.</p></div>
           </div>
-        </div>
+          </div>
+        </details>
       </section>
       <section id="reports">
         <div class="card"><h2>Reports</h2><div id="reportTabs" class="report-tabs"></div><div id="reportView"></div></div>
@@ -410,14 +436,13 @@
         <div class="finance-grid">
           <div class="grid">
             <div class="card"><div class="section-head"><h2>우리 가족 자금 상황</h2><span class="muted">주택 매매 목표</span></div><div id="familyOverview"></div></div>
-            <div class="card"><div class="section-head"><h2>금액 수정</h2><span class="muted">저장 즉시 반영</span></div><div id="familyEditor" class="edit-grid"></div><div class="save-row"><span id="familySaveState" class="save-state">금액을 수정한 뒤 저장하세요.</span><button class="primary" onclick="saveFamilyPlan()">저장</button></div></div>
-            <div class="card"><h2>목표 진행률</h2><div id="familyGoalsPage" class="list"></div></div>
-            <div class="card"><h2>실행 순서</h2><div id="familyStepsPage" class="step-list"></div></div>
+            <details class="detail-disclosure"><summary>금액 수정하기</summary><div class="detail-body"><div id="familyEditor" class="edit-grid"></div><div class="save-row"><span id="familySaveState" class="save-state">금액을 수정한 뒤 저장하세요.</span><button class="primary" onclick="saveFamilyPlan()">저장</button></div></div></details>
+            <details class="detail-disclosure"><summary>목표 진행률과 실행 순서 보기</summary><div class="detail-body"><div id="familyGoalsPage" class="list"></div><div id="familyStepsPage" class="step-list" style="margin-top:14px"></div></div></details>
           </div>
           <div class="grid">
             <div class="card"><div class="section-head"><h2>왕숙2 A4 본청약</h2><span class="muted">우선 시나리오</span></div><div id="familyPresale"></div></div>
-            <div class="card"><h2>자산</h2><div id="familyAssets" class="finance-list"></div></div>
-            <div class="card"><h2>부채</h2><div id="familyDebts" class="finance-list"></div></div>
+            <div class="card"><h2>자산</h2><div id="familyAssets" class="finance-list bounded-list"></div></div>
+            <div class="card"><h2>부채</h2><div id="familyDebts" class="finance-list bounded-list"></div></div>
           </div>
         </div>
       </section>
@@ -429,7 +454,7 @@
             <div class="card"><h2>이번 달 할 일</h2><div id="taeriTodo" class="step-list"></div></div>
           </div>
           <div class="grid">
-            <div class="card"><div class="section-head"><h2>참고 출처</h2><span class="muted">공식 링크</span></div><div id="taeriSources" class="source-list"></div></div>
+            <div class="card"><div class="section-head"><h2>참고 출처</h2><span class="muted">공식 링크</span></div><div id="taeriSources" class="source-list bounded-list"></div></div>
             <div class="card"><h2>메모</h2><p class="muted">정책과 지원금은 매년 바뀔 수 있어 실제 신청 전 복지로, 어린이집, 주민센터에서 한 번 더 확인합니다.</p></div>
           </div>
         </div>
@@ -437,7 +462,7 @@
       <section id="notifications">
         <div class="grid cards" id="stats"></div>
         <div class="card" style="margin-top:14px"><h2>Notification Channels</h2><div id="channels" class="grid channels"></div></div>
-        <div class="card" style="margin-top:14px"><h2>Notification Logs</h2><div id="logs" class="list"></div></div>
+        <div class="card" style="margin-top:14px"><h2>Notification Logs</h2><div id="logs" class="list bounded-list"></div></div>
       </section>
       <section id="settings">
         <div class="card"><h2>Report Subscription</h2>
@@ -512,7 +537,7 @@
     }
     function tickClock() {
       const now = new Date();
-      document.getElementById("clockDate").textContent = formatKst(now, { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+      document.getElementById("clockDate").textContent = formatKst(now, { month: "numeric", day: "numeric", weekday: "short" });
       document.getElementById("clockTime").textContent = formatKst(now, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
       renderSessions();
     }
@@ -602,15 +627,15 @@
       document.getElementById("taeriSources").innerHTML = plan.sources.map(s => `<div class="news-row"><span class="news-source">${s.source}</span><a class="news-link" href="${s.url}" target="_blank" rel="noreferrer">${s.title}</a><p class="muted">${s.summary}</p><a class="detail-link" href="${s.url}" target="_blank" rel="noreferrer">자세히 보기</a></div>`).join("");
     }
     function renderOverview(data) {
-      const plan = data.family_plan || {};
-      const metrics = plan.metrics || [];
-      const availableFunds = metrics.find(m => m.label === "가용 자금");
-      const homeTarget = metrics.find(m => m.label === "목표 하단");
-      document.getElementById("overviewMood").innerHTML = `<div class="overview-metric">${data.mood.score}점</div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.slice(0, 3).map(b => `<span class="badge">${b}</span>`).join("")}</p>`;
-      document.getElementById("overviewFamily").innerHTML = `<div class="overview-metric">${availableFunds ? availableFunds.value : "-"}</div><p class="muted">현재 가용 자금</p><div class="overview-item"><span>주택 목표 하단</span><b>${homeTarget ? homeTarget.value : "-"}</b></div>`;
+      const focus = data.trade_board.filter(item => item.symbol === "005930" || item.symbol === "000660");
+      document.getElementById("overviewFocus").innerHTML = focus.length ? focus.map(item => `<div class="focus-stock"><div class="focus-stock-top"><span><b>${item.name}</b><br><span class="asset-sub">${item.symbol} · ${item.signal}</span></span><span class="${toneClass(item.tone)}"><b>${item.change}</b></span></div><div class="focus-stock-price">${item.price}</div>${miniSpark(item.spark, item.tone)}</div>`).join("") : `<p class="muted">관심 종목 시세를 수집하고 있습니다.</p>`;
+      document.getElementById("overviewFamily").innerHTML = `<h3>주거 계획 체크</h3><p class="muted">가족 자금과 부채, 목표 매매가를 상세 화면에서 확인합니다.</p><div class="overview-item"><span>상태</span><b class="up">계획 점검 중</b></div>`;
       document.getElementById("overviewBrief").innerHTML = data.brief.slice(0, 4).map((item, index) => `<div class="overview-item"><span>${index + 1}. ${item}</span></div>`).join("");
       document.getElementById("overviewIndices").innerHTML = data.indices.slice(0, 4).map(item => `<div class="overview-item"><span><b>${item.symbol}</b></span><span class="${toneClass(item.tone)}"><b>${item.value}</b> ${item.change}</span></div>`).join("");
       document.getElementById("overviewAlerts").innerHTML = data.alerts.slice(0, 4).map(item => `<div class="overview-item"><span>${item.title}</span><span class="badge">${item.level}</span></div>`).join("");
+    }
+    function renderAssetRows(items) {
+      return items.length ? `<div class="asset-row asset-head"><span>종목</span><span>현재가</span><span>등락률</span><span>흐름</span></div>` + items.map(t => `<div class="asset-row"><div class="asset-name"><span class="avatar">${t.symbol.slice(0,2)}</span><span><span class="asset-symbol">${t.symbol}</span><br><span class="asset-sub">${t.name} · ${t.signal}</span></span></div><div class="asset-price">${t.price}</div><div class="asset-change ${toneClass(t.tone)}">${t.change}</div>${miniSpark(t.spark, t.tone)}</div>`).join("") : `<p class="muted">관심 종목 시세를 수집하고 있습니다.</p>`;
     }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
@@ -621,7 +646,8 @@
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = `<div class="quote-row quote-head"><span>자산</span><span>현재</span><span>변동</span><span>구분</span></div>` + data.indices.map(i => `<div class="quote-row"><span><b>${i.symbol}</b><br><span class="asset-sub">${i.name}</span></span><span class="value">${i.value}</span><span class="${toneClass(i.tone)}"><b>${i.change}</b></span><span class="mini-meta">${i.session} / ${i.volume}</span></div>`).join("");
-      document.getElementById("tradeBoard").innerHTML = `<div class="asset-row asset-head"><span>종목</span><span>현재가</span><span>등락률</span><span>흐름</span></div>` + data.trade_board.map(t => `<div class="asset-row"><div class="asset-name"><span class="avatar">${t.symbol.slice(0,2)}</span><span><span class="asset-symbol">${t.symbol}</span><br><span class="asset-sub">${t.name} · ${t.signal}</span></span></div><div class="asset-price">${t.price}</div><div class="asset-change ${toneClass(t.tone)}">${t.change}</div>${miniSpark(t.spark, t.tone)}</div>`).join("");
+      document.getElementById("focusTradeBoard").innerHTML = renderAssetRows(data.trade_board.filter(t => t.symbol === "005930" || t.symbol === "000660"));
+      document.getElementById("tradeBoard").innerHTML = renderAssetRows(data.trade_board);
       document.getElementById("watchlist").innerHTML = data.watchlist.map(w => `<div><div class="row"><span><b>${w.symbol}</b> <span class="muted">${w.name}</span><br><span>${w.signal}</span></span><span class="${w.change && w.change.startsWith('-') ? 'down' : 'up'}">${w.change || ''}</span></div><div class="mini-meta"><span>${w.risk}</span><span>Signal ${w.score}</span></div><div class="bar"><span style="width:${w.score}%"></span></div></div>`).join("");
       document.getElementById("dc").innerHTML = `<h3>${data.dc.style}</h3><p class="muted">${data.dc.plain_language}</p><div class="list" style="margin-top:12px">${data.dc.allocation.map(a => `<div><div class="row"><span>${a.label}</span><span>현재 ${a.current}% / 목표 ${a.target}%</span></div><div class="bar"><span style="width:${a.current}%"></span></div></div>`).join("")}</div><p class="badge">Risk Score ${data.dc.risk_score}</p><p class="muted" style="margin-top:10px">${data.dc.rebalance}</p>`;
       document.getElementById("sectors").innerHTML = data.sectors.map(s => `<div><b>${s.name}</b><p class="${toneClass(s.tone)}">${s.change}</p></div>`).join("");

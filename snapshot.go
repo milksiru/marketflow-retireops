@@ -136,7 +136,25 @@ func familyPlan(v map[string]int64) map[string]any {
 	editable := []map[string]any{{"key": "cash_stock", "label": "현금/주식", "value": cash, "category": "asset"}, {"key": "park_juyoung_retirement", "label": "박주영님 퇴직금", "value": wife, "category": "asset"}, {"key": "kim_jihun_retirement", "label": "김지훈님 퇴직금", "value": mine, "category": "asset"}, {"key": "savings", "label": "예적금", "value": savings, "category": "asset"}, {"key": "jeonse_deposit", "label": "전세 보증금", "value": deposit, "category": "asset"}, {"key": "car_loan", "label": "차량 대출", "value": car, "category": "debt"}, {"key": "jeonse_loan", "label": "전세 대출", "value": loan, "category": "debt"}, {"key": "monthly_saving", "label": "월 저축금", "value": monthly, "category": "plan"}, {"key": "home_target_low", "label": "목표 매매가 하단", "value": low, "category": "plan"}, {"key": "home_target_high", "label": "목표 매매가 상단", "value": high, "category": "plan"}}
 	return map[string]any{"target": fmt.Sprintf("%s ~ %s", money(low), money(high)), "summary": "가족 자산과 부채를 기준으로 주거 계획을 점검합니다.", "assets": []map[string]any{{"label": "현금/주식", "value": money(cash)}, {"label": "퇴직금", "value": money(wife + mine)}, {"label": "예적금", "value": money(savings)}, {"label": "전세 보증금", "value": money(deposit)}}, "debts": []map[string]any{{"label": "차량 대출", "value": money(car)}, {"label": "전세 대출", "value": money(loan)}}, "metrics": []map[string]any{{"label": "총자산", "value": money(totalAssets)}, {"label": "총부채", "value": money(totalDebts)}, {"label": "가용 자금", "value": money(base)}, {"label": "월 저축금", "value": money(monthly)}, {"label": "목표 하단", "value": money(low)}, {"label": "목표 상단", "value": money(high)}}, "goals": []map[string]any{{"label": "매매 준비금", "current": base, "target": low, "caption": "목표 하단 기준"}, {"label": "비상금", "current": savings, "target": 10000000, "caption": "생활 안정성 우선"}, {"label": "월 저축금", "current": monthly, "target": 3000000, "caption": "주거 목표를 위한 월 적립 점검"}}, "steps": []string{"비상금을 먼저 확보합니다.", "부채 상환 조건을 확인합니다.", "주거 목표와 월 저축금을 함께 점검합니다."}, "monthly_saving": money(monthly), "editable": editable, "presale": map[string]any{"title": "왕숙2 A4 본청약", "status": "일정 확인", "notice": "사전청약 당첨 조건과 본청약 일정을 확인하세요.", "expected": "분양가, 계약금, 대출 한도는 공고 시점에 다시 계산합니다.", "plan": "가용 자금과 전세 보증금 반환 시점을 기준으로 계약 가능 범위를 점검합니다.", "focus": []string{"본청약 공고 일정 확인", "계약금과 잔금 현금 흐름 분리", "전세 보증금 반환 시점 점검", "대출 한도와 금리 재확인"}, "note": "최종 조건은 본청약 공고와 금융기관 심사 결과에 따라 달라질 수 있습니다."}}
 }
-func money(v int64) string { return strconv.FormatInt(v/10000, 10) + "만원" }
+func money(v int64) string {
+	manwon := v / 10000
+	eok := manwon / 10000
+	rest := manwon % 10000
+	if eok == 0 {
+		return commaInt(manwon) + "만원"
+	}
+	if rest == 0 {
+		return commaInt(eok) + "억원"
+	}
+	return commaInt(eok) + "억 " + commaInt(rest) + "만원"
+}
+func commaInt(v int64) string {
+	text := strconv.FormatInt(v, 10)
+	for i := len(text) - 3; i > 0; i -= 3 {
+		text = text[:i] + "," + text[i:]
+	}
+	return text
+}
 func formatPrice(v float64) string {
 	text := fmt.Sprintf("%.2f", v)
 	parts := strings.SplitN(text, ".", 2)
