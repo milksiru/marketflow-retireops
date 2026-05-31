@@ -210,8 +210,8 @@ def _family_plan():
         "summary": "전세 순자산과 현금성 자산을 합치면 매매 진입선에는 근접했지만, 차 할부 1억 때문에 안전마진 관리가 먼저입니다.",
         "assets": [
             {"label": "현금/주식", "value": _money_krw(cash_stock)},
-            {"label": "와이프 자금", "value": _money_krw(wife_cash)},
-            {"label": "내 퇴직금", "value": _money_krw(severance)},
+            {"label": "박주영님 퇴직금", "value": _money_krw(wife_cash)},
+            {"label": "김지훈님 퇴직금", "value": _money_krw(severance)},
             {"label": "예적금", "value": _money_krw(savings)},
             {"label": "전세 순자산", "value": _money_krw(housing_equity)},
         ],

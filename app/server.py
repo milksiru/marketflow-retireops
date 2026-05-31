@@ -139,7 +139,7 @@ class Handler(BaseHTTPRequestHandler):
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: var(--bg); color: var(--text); }
     .shell { display: grid; grid-template-columns: 188px minmax(0, 1fr); min-height: 100vh; }
-    aside { border-right: 1px solid var(--line); padding: 22px 14px; background: rgba(255,255,255,.86); position: sticky; top: 0; height: 100vh; backdrop-filter: blur(14px); }
+    aside { border-right: 1px solid var(--line); padding: 22px 14px 48px; background: rgba(255,255,255,.86); position: sticky; top: 0; height: 100dvh; overflow-y: auto; scrollbar-gutter: stable; backdrop-filter: blur(14px); }
     .brand { font-weight: 850; font-size: 18px; margin: 2px 8px 22px; color: var(--text); }
     nav button { display: block; width: 100%; margin: 3px 0; padding: 11px 12px; border: 0; border-radius: 8px; text-align: left; color: var(--soft); background: transparent; cursor: pointer; font-weight: 700; }
     nav button.active, nav button:hover { background: #eef6ff; color: var(--blue); }
@@ -308,7 +308,6 @@ class Handler(BaseHTTPRequestHandler):
     <aside>
       <div class="brand">MarketFlow RetireOps</div>
       <nav id="sideNav"></nav>
-      <div id="familyPlan" class="family-plan"></div>
     </aside>
     <main>
       <header>
@@ -400,7 +399,7 @@ class Handler(BaseHTTPRequestHandler):
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈"],["family","가족 플랜"],["reports","리포트"],["notifications","알림"],["settings","설정"]];
+    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"],["family","가족 플랜"]];
     const toneClass = t => t === "up" ? "up" : t === "down" ? "down" : t === "warn" ? "warn" : "flat";
     function formatKst(value, options) {
       return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
@@ -470,7 +469,8 @@ class Handler(BaseHTTPRequestHandler):
         const pct = Math.max(4, Math.min(100, Math.round((g.current / g.target) * 100)));
         return `<div class="plan-goal"><div class="plan-goal-top"><span>${g.label}</span><span>${pct}%</span></div><div class="bar"><span style="width:${pct}%"></span></div><small>${g.caption}</small></div>`;
       }).join("");
-      document.getElementById("familyPlan").innerHTML = `<h3>${plan.title}</h3><div class="plan-target">${plan.target}</div><p class="plan-summary">${plan.summary}</p><div class="plan-mini">${plan.metrics.map(m => `<div class="plan-line"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div>${goalHtml}<div class="plan-note">월 예적금 ${plan.monthly_saving} 기준. 세금, 대출한도, 금리는 계약 전 별도 확인 필요.</div>`;
+      const sidePlan = document.getElementById("familyPlan");
+      if (sidePlan) sidePlan.innerHTML = `<h3>${plan.title}</h3><div class="plan-target">${plan.target}</div><p class="plan-summary">${plan.summary}</p><div class="plan-mini">${plan.metrics.map(m => `<div class="plan-line"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div>${goalHtml}<div class="plan-note">월 예적금 ${plan.monthly_saving} 기준. 세금, 대출한도, 금리는 계약 전 별도 확인 필요.</div>`;
       const steps = document.getElementById("familySteps");
       if (steps) steps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
       const overview = document.getElementById("familyOverview");
