@@ -201,7 +201,7 @@ class Handler(BaseHTTPRequestHandler):
     .channels { grid-template-columns: repeat(5, minmax(140px, 1fr)); }
     .switch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: var(--muted); }
     .switch.on { background: var(--green); }
-    .mobilebar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,.94); border-top: 1px solid var(--line); grid-template-columns: repeat(4, 1fr); z-index: 5; backdrop-filter: blur(14px); }
+    .mobilebar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,.94); border-top: 1px solid var(--line); grid-template-columns: repeat(5, 1fr); z-index: 5; backdrop-filter: blur(14px); }
     .mobilebar button { border: 0; background: transparent; color: var(--muted); padding: 12px 6px; font-weight: 800; }
     .mobilebar button.active { color: var(--blue); }
     section { display: none; }
@@ -223,6 +223,18 @@ class Handler(BaseHTTPRequestHandler):
     .shell { grid-template-columns: 172px minmax(0, 1fr); }
     aside { background: #fff; }
     .brand { line-height: 1.35; }
+    .family-plan { margin-top: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #f8fafc; }
+    .family-plan h3 { font-size: 14px; margin-bottom: 8px; }
+    .plan-target { display: inline-flex; padding: 5px 8px; border-radius: 999px; background: #eef6ff; color: var(--blue); font-size: 12px; font-weight: 900; margin-bottom: 9px; }
+    .plan-summary { color: var(--soft); font-size: 12px; line-height: 1.5; margin-bottom: 10px; }
+    .plan-mini { display: grid; gap: 6px; margin-top: 8px; }
+    .plan-line { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .plan-line span:first-child { color: var(--muted); }
+    .plan-line b { font-variant-numeric: tabular-nums; text-align: right; }
+    .plan-goal { margin-top: 10px; }
+    .plan-goal-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 850; }
+    .plan-goal small { display: block; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+    .plan-note { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.45; }
     main { max-width: 1380px; padding-top: 20px; }
     header { align-items: center; min-height: 64px; }
     .header-copy p { max-width: 560px; }
@@ -258,6 +270,16 @@ class Handler(BaseHTTPRequestHandler):
     .news-link { color: var(--text); text-decoration: none; font-weight: 850; line-height: 1.35; }
     .news-link:hover { color: var(--blue); }
     .detail-link { color: var(--blue); text-decoration: none; font-size: 12px; font-weight: 850; }
+    .step-list { display: grid; gap: 10px; }
+    .step-item { padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--soft); line-height: 1.55; font-size: 13px; }
+    .step-item:last-child { border-bottom: 0; }
+    .finance-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 14px; align-items: start; }
+    .money-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .money-card { background: var(--panel2); border-radius: 8px; padding: 14px; min-height: 92px; }
+    .money-card span { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .money-card b { display: block; margin-top: 8px; font-size: 22px; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .finance-list { display: grid; gap: 6px; }
+    .finance-list .row { padding: 10px 0; }
     .brief-card .row { align-items: start; }
     .brief-no { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: #eef6ff; color: var(--blue); font-size: 12px; font-weight: 900; }
     .risk-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; height: 26px; border-radius: 999px; background: #eef6ff; color: var(--blue); font-weight: 900; font-size: 12px; }
@@ -277,6 +299,7 @@ class Handler(BaseHTTPRequestHandler):
       .asset-row .asset-price { text-align: left; }
       .asset-row .tiny-spark { grid-column: 1 / -1; }
       .hero-mood .mood { grid-template-columns: 1fr; }
+      .finance-grid, .money-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -285,6 +308,7 @@ class Handler(BaseHTTPRequestHandler):
     <aside>
       <div class="brand">MarketFlow RetireOps</div>
       <nav id="sideNav"></nav>
+      <div id="familyPlan" class="family-plan"></div>
     </aside>
     <main>
       <header>
@@ -324,6 +348,7 @@ class Handler(BaseHTTPRequestHandler):
           </div>
           <div class="right-rail">
             <div class="card"><div class="section-head"><h2>실시간 랭킹</h2><span class="muted">변동률 기준</span></div><div id="ranking" class="list"></div></div>
+            <div class="card"><div class="section-head"><h2>가족 실행 플랜</h2><span class="muted">주택 목표</span></div><div id="familySteps" class="step-list"></div></div>
             <div class="card"><div class="section-head"><h2>뉴스 근거</h2><span class="muted">출처와 링크</span></div><div id="newsRefs" class="list"></div></div>
             <div class="card"><h2>데이터 메모</h2><p class="muted">표시된 분석은 투자 참고 신호이며 자동 매수/매도 판단이 아닙니다.</p></div>
           </div>
@@ -331,6 +356,19 @@ class Handler(BaseHTTPRequestHandler):
       </section>
       <section id="reports">
         <div class="card"><h2>Reports</h2><div id="reportTabs" class="report-tabs"></div><div id="reportView"></div></div>
+      </section>
+      <section id="family">
+        <div class="finance-grid">
+          <div class="grid">
+            <div class="card"><div class="section-head"><h2>우리 가족 자금 상황</h2><span class="muted">주택 매매 목표</span></div><div id="familyOverview"></div></div>
+            <div class="card"><h2>목표 진행률</h2><div id="familyGoalsPage" class="list"></div></div>
+            <div class="card"><h2>실행 순서</h2><div id="familyStepsPage" class="step-list"></div></div>
+          </div>
+          <div class="grid">
+            <div class="card"><h2>자산</h2><div id="familyAssets" class="finance-list"></div></div>
+            <div class="card"><h2>부채</h2><div id="familyDebts" class="finance-list"></div></div>
+          </div>
+        </div>
       </section>
       <section id="notifications">
         <div class="grid cards" id="stats"></div>
@@ -362,7 +400,7 @@ class Handler(BaseHTTPRequestHandler):
   </div>
   <div class="mobilebar" id="mobileNav"></div>
   <script>
-    const views = [["dashboard","홈"],["reports","리포트"],["notifications","알림"],["settings","설정"]];
+    const views = [["dashboard","홈"],["family","가족 플랜"],["reports","리포트"],["notifications","알림"],["settings","설정"]];
     const toneClass = t => t === "up" ? "up" : t === "down" ? "down" : t === "warn" ? "warn" : "flat";
     function formatKst(value, options) {
       return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", ...options }).format(value);
@@ -426,9 +464,30 @@ class Handler(BaseHTTPRequestHandler):
     function miniSpark(points, tone) {
       return spark(points, tone).replace('class="spark"', 'class="spark tiny-spark"');
     }
+    function renderFamilyPlan(plan) {
+      if (!plan) return;
+      const goalHtml = plan.goals.map(g => {
+        const pct = Math.max(4, Math.min(100, Math.round((g.current / g.target) * 100)));
+        return `<div class="plan-goal"><div class="plan-goal-top"><span>${g.label}</span><span>${pct}%</span></div><div class="bar"><span style="width:${pct}%"></span></div><small>${g.caption}</small></div>`;
+      }).join("");
+      document.getElementById("familyPlan").innerHTML = `<h3>${plan.title}</h3><div class="plan-target">${plan.target}</div><p class="plan-summary">${plan.summary}</p><div class="plan-mini">${plan.metrics.map(m => `<div class="plan-line"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div>${goalHtml}<div class="plan-note">월 예적금 ${plan.monthly_saving} 기준. 세금, 대출한도, 금리는 계약 전 별도 확인 필요.</div>`;
+      const steps = document.getElementById("familySteps");
+      if (steps) steps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
+      const overview = document.getElementById("familyOverview");
+      if (overview) overview.innerHTML = `<div class="money-grid">${plan.metrics.map(m => `<div class="money-card"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div><p class="muted" style="margin-top:14px">${plan.summary}</p>`;
+      const assets = document.getElementById("familyAssets");
+      if (assets) assets.innerHTML = plan.assets.map(a => `<div class="row"><span>${a.label}</span><b>${a.value}</b></div>`).join("");
+      const debts = document.getElementById("familyDebts");
+      if (debts) debts.innerHTML = plan.debts.map(d => `<div class="row"><span>${d.label}</span><b class="warn">${d.value}</b></div>`).join("");
+      const familyGoals = document.getElementById("familyGoalsPage");
+      if (familyGoals) familyGoals.innerHTML = goalHtml;
+      const familySteps = document.getElementById("familyStepsPage");
+      if (familySteps) familySteps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
+      renderFamilyPlan(data.family_plan);
       document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
       document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
       document.getElementById("indices").innerHTML = `<div class="quote-row quote-head"><span>자산</span><span>현재</span><span>변동</span><span>구분</span></div>` + data.indices.map(i => `<div class="quote-row"><span><b>${i.symbol}</b><br><span class="asset-sub">${i.name}</span></span><span class="value">${i.value}</span><span class="${toneClass(i.tone)}"><b>${i.change}</b></span><span class="mini-meta">${i.session} / ${i.volume}</span></div>`).join("");

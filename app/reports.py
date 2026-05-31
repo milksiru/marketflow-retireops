@@ -94,6 +94,7 @@ def market_snapshot():
         live["alerts"] = _alerts_from_live(live)
         live["rankings"] = _rankings_from_trade_board(live["trade_board"])
         live["news_sources"] = _market_news_sources()
+        live["family_plan"] = _family_plan()
         return live
     return _fallback_market_snapshot()
 
@@ -173,6 +174,68 @@ def _fallback_market_snapshot():
             {"rank": 4, "symbol": "TLT", "name": "Long Bond ETF", "price": "91.4", "change": "-0.8%", "tone": "down", "signal": "Rate Pressure"},
         ],
         "news_sources": _market_news_sources(),
+        "family_plan": _family_plan(),
+    }
+
+
+def _money_krw(value):
+    if value >= 100_000_000:
+        eok = value // 100_000_000
+        man = (value % 100_000_000) // 10_000
+        return f"{eok}억 {man:,}만" if man else f"{eok}억"
+    return f"{value // 10_000:,}만"
+
+
+def _family_plan():
+    cash_stock = 25_000_000
+    wife_cash = 15_000_000
+    severance = 25_000_000
+    savings = 600_000
+    car_loan = 100_000_000
+    jeonse_deposit = 250_000_000
+    jeonse_loan = 109_000_000
+    liquid_assets = cash_stock + wife_cash + severance + savings
+    housing_equity = jeonse_deposit - jeonse_loan
+    current_net = liquid_assets + housing_equity - car_loan
+    home_target_low = 600_000_000
+    home_target_high = 700_000_000
+    target_mid = 650_000_000
+    recommended_base_cash = 220_000_000
+    available_home_base = liquid_assets + housing_equity
+    gap = max(0, recommended_base_cash - available_home_base)
+    monthly_saving = 100_000
+    return {
+        "title": "우리 가족 플랜",
+        "target": "집 매매 6억~7억",
+        "summary": "전세 순자산과 현금성 자산을 합치면 매매 진입선에는 근접했지만, 차 할부 1억 때문에 안전마진 관리가 먼저입니다.",
+        "assets": [
+            {"label": "현금/주식", "value": _money_krw(cash_stock)},
+            {"label": "와이프 자금", "value": _money_krw(wife_cash)},
+            {"label": "내 퇴직금", "value": _money_krw(severance)},
+            {"label": "예적금", "value": _money_krw(savings)},
+            {"label": "전세 순자산", "value": _money_krw(housing_equity)},
+        ],
+        "debts": [
+            {"label": "차 할부", "value": _money_krw(car_loan)},
+            {"label": "전세 대출", "value": _money_krw(jeonse_loan)},
+        ],
+        "metrics": [
+            {"label": "가용 자금", "value": _money_krw(available_home_base)},
+            {"label": "순자산 추정", "value": _money_krw(current_net)},
+            {"label": "목표 기준", "value": _money_krw(target_mid)},
+        ],
+        "goals": [
+            {"label": "매매 준비금", "current": available_home_base, "target": recommended_base_cash, "caption": f"부대비용 포함 기준, 부족분 {_money_krw(gap)}"},
+            {"label": "비상금", "current": savings, "target": 10_000_000, "caption": "생활 안정성 우선"},
+            {"label": "차 할부 관리", "current": max(0, car_loan - 30_000_000), "target": car_loan, "caption": "최소 3천만 선상환 후보"},
+        ],
+        "steps": [
+            "1단계: 예적금/비상금 1,000만 원을 먼저 확보합니다.",
+            "2단계: 차 할부는 금리와 중도상환수수료를 보고 3,000만 원 이상 감축 후보로 봅니다.",
+            "3단계: 6억~7억 매매는 전세 순자산 반환 시점을 기준으로 대출 한도와 월 상환액을 같이 계산합니다.",
+            "4단계: 투자 자산은 매수보다 주택 계약금·취득세·이사비 현금흐름을 우선합니다.",
+        ],
+        "monthly_saving": _money_krw(monthly_saving),
     }
 
 
