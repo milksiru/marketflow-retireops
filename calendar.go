@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -111,8 +112,13 @@ func fetchSECCalendarEvents() ([]CalendarEvent, error) {
 				Summary string `xml:"summary"`
 			} `xml:"entry"`
 		}
-		err = xml.NewDecoder(res.Body).Decode(&feed)
+		data, readErr := io.ReadAll(res.Body)
 		res.Body.Close()
+		if readErr != nil {
+			return out, readErr
+		}
+		text := strings.Replace(string(data), `encoding="ISO-8859-1"`, `encoding="UTF-8"`, 1)
+		err = xml.NewDecoder(strings.NewReader(text)).Decode(&feed)
 		if err != nil {
 			return out, err
 		}
