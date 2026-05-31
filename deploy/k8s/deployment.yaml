@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: 192.168.55.148:5000/milksiru/marketflow-retireops:b9ce2447e4ff
+          image: 192.168.55.148:5000/milksiru/marketflow-retireops:159e037558d9
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
