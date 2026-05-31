@@ -92,6 +92,8 @@ def market_snapshot():
         live["sectors"] = _sectors_from_trade_board(live["trade_board"])
         live["dc"] = fallback["dc"]
         live["alerts"] = _alerts_from_live(live)
+        live["rankings"] = _rankings_from_trade_board(live["trade_board"])
+        live["news_sources"] = _market_news_sources()
         return live
     return _fallback_market_snapshot()
 
@@ -164,6 +166,13 @@ def _fallback_market_snapshot():
             {"level": "info", "title": "Rebalance Needed", "message": "주식형 비중이 목표보다 4%p 높습니다."},
             {"level": "watch", "title": "Volatility Watch", "message": "중요 지표 발표 전 변동성 확대 가능성이 있습니다."},
         ],
+        "rankings": [
+            {"rank": 1, "symbol": "NVDA", "name": "NVIDIA", "price": "1,128.4", "change": "+3.8%", "tone": "up", "signal": "Momentum"},
+            {"rank": 2, "symbol": "SOXX", "name": "Semiconductor ETF", "price": "240.8", "change": "+2.1%", "tone": "up", "signal": "Overheat"},
+            {"rank": 3, "symbol": "QQQ", "name": "Nasdaq 100 ETF", "price": "458.5", "change": "+1.5%", "tone": "up", "signal": "Risk On"},
+            {"rank": 4, "symbol": "TLT", "name": "Long Bond ETF", "price": "91.4", "change": "-0.8%", "tone": "down", "signal": "Rate Pressure"},
+        ],
+        "news_sources": _market_news_sources(),
     }
 
 
@@ -216,6 +225,52 @@ def _sectors_from_trade_board(trade_board):
         tone = "up" if avg >= 0.25 else "down" if avg <= -0.25 else "flat"
         sectors.append({"name": name, "change": f"{avg:+.2f}%", "tone": tone})
     return sectors
+
+
+def _change_number(value):
+    try:
+        return float(str(value).replace("%", "").replace("+", "").replace(",", ""))
+    except ValueError:
+        return 0
+
+
+def _rankings_from_trade_board(trade_board):
+    ordered = sorted(trade_board, key=lambda item: abs(_change_number(item.get("change", "0"))), reverse=True)
+    return [
+        {
+            "rank": index + 1,
+            "symbol": item["symbol"],
+            "name": item["name"],
+            "price": item["price"],
+            "change": item["change"],
+            "tone": item["tone"],
+            "signal": item["signal"],
+        }
+        for index, item in enumerate(ordered[:8])
+    ]
+
+
+def _market_news_sources():
+    return [
+        {
+            "source": "Yahoo Finance",
+            "title": "시장 가격, 지수, 종목 뉴스 확인",
+            "summary": "글로벌 지수와 개별 종목 가격 흐름을 교차 확인하는 기준 소스입니다.",
+            "url": "https://finance.yahoo.com/",
+        },
+        {
+            "source": "Reuters Markets",
+            "title": "글로벌 주식, 채권, 환율, 원자재 이슈",
+            "summary": "매크로와 시장 위험 이벤트를 해석할 때 참고하는 뉴스 소스입니다.",
+            "url": "https://www.reuters.com/markets/",
+        },
+        {
+            "source": "CNBC Markets",
+            "title": "미국장 실시간 흐름과 섹터 뉴스",
+            "summary": "미국장 장중 이슈와 주요 종목 움직임을 보조 확인합니다.",
+            "url": "https://www.cnbc.com/markets/",
+        },
+    ]
 
 
 def _alerts_from_live(snapshot):

@@ -220,6 +220,64 @@ class Handler(BaseHTTPRequestHandler):
       .heat { grid-template-columns: repeat(2, 1fr); }
       .mobilebar { display: grid; }
     }
+    .shell { grid-template-columns: 172px minmax(0, 1fr); }
+    aside { background: #fff; }
+    .brand { line-height: 1.35; }
+    main { max-width: 1380px; padding-top: 20px; }
+    header { align-items: center; min-height: 64px; }
+    .header-copy p { max-width: 560px; }
+    .page-kicker { color: var(--blue); font-size: 13px; font-weight: 850; margin-bottom: 6px; }
+    .dashboard-shell { display: grid; grid-template-columns: minmax(0, 1fr) 318px; gap: 16px; align-items: start; }
+    .main-board { display: grid; gap: 14px; min-width: 0; }
+    .right-rail { display: grid; gap: 14px; position: sticky; top: 16px; min-width: 0; }
+    .market-overview { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; }
+    .hero-mood { min-height: 236px; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
+    .hero-mood .mood { grid-template-columns: 116px 1fr; }
+    .hero-mood .score { width: 104px; height: 104px; background: #f0f6ff; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .section-head .muted { font-size: 12px; }
+    .quote-table { display: grid; gap: 2px; }
+    .quote-row, .asset-row, .rank-row, .news-row { display: grid; align-items: center; border-radius: 8px; min-width: 0; }
+    .quote-row { grid-template-columns: 1.2fr .9fr .75fr .6fr; gap: 10px; padding: 11px 12px; }
+    .quote-row:hover, .asset-row:hover, .rank-row:hover { background: #f7f9fc; }
+    .quote-head, .asset-head { color: var(--muted); font-size: 12px; font-weight: 800; }
+    .asset-table { display: grid; gap: 4px; }
+    .asset-row { grid-template-columns: 1.1fr .85fr .75fr 1.05fr; gap: 12px; padding: 12px; border-top: 1px solid var(--line); }
+    .asset-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .avatar { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: #eef3f8; color: var(--soft); font-size: 11px; font-weight: 900; }
+    .asset-symbol { font-weight: 900; }
+    .asset-sub { color: var(--muted); font-size: 13px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .asset-price { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; text-align: right; }
+    .asset-change { font-weight: 850; text-align: right; }
+    .tiny-spark { min-width: 112px; }
+    .rank-row { grid-template-columns: 26px 1fr auto; gap: 9px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .rank-row:last-child, .news-row:last-child { border-bottom: 0; }
+    .rank-num { color: var(--blue); font-weight: 900; }
+    .news-row { gap: 5px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .news-source { color: var(--blue); font-size: 12px; font-weight: 850; }
+    .news-link { color: var(--text); text-decoration: none; font-weight: 850; line-height: 1.35; }
+    .news-link:hover { color: var(--blue); }
+    .detail-link { color: var(--blue); text-decoration: none; font-size: 12px; font-weight: 850; }
+    .brief-card .row { align-items: start; }
+    .brief-no { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: #eef6ff; color: var(--blue); font-size: 12px; font-weight: 900; }
+    .risk-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 46px; height: 26px; border-radius: 999px; background: #eef6ff; color: var(--blue); font-weight: 900; font-size: 12px; }
+    .clock { min-width: 270px; box-shadow: none; }
+    .sessions { display: none; }
+    .primary { box-shadow: 0 8px 18px rgba(49,130,246,.2); }
+    @media (max-width: 1180px) {
+      .dashboard-shell { grid-template-columns: 1fr; }
+      .right-rail { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .right-rail .card:first-child { grid-row: span 2; }
+    }
+    @media (max-width: 980px) {
+      .market-overview, .right-rail { grid-template-columns: 1fr; }
+      .quote-row { grid-template-columns: 1.2fr .8fr .65fr; }
+      .quote-row span:nth-child(4), .quote-row .mini-meta { display: none; }
+      .asset-row { grid-template-columns: 1fr auto; }
+      .asset-row .asset-price { text-align: left; }
+      .asset-row .tiny-spark { grid-column: 1 / -1; }
+      .hero-mood .mood { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -230,9 +288,10 @@ class Handler(BaseHTTPRequestHandler):
     </aside>
     <main>
       <header>
-        <div>
+        <div class="header-copy">
+          <div class="page-kicker">MarketFlow Live Desk</div>
           <h1>오늘의 시장 흐름</h1>
-          <p class="muted">시장 상태, 관심 ETF, DC 운용 참고, 알림 발송 상태를 한 번에 확인합니다.</p>
+          <p class="muted">시장 데이터, 관심 ETF, DC 운용 참고와 뉴스 근거를 한 화면에서 확인합니다.</p>
         </div>
         <div class="header-actions">
           <div class="clock">
@@ -246,19 +305,28 @@ class Handler(BaseHTTPRequestHandler):
         </div>
       </header>
       <section id="dashboard" class="active">
-        <div class="grid top">
-          <div class="card"><h2>Market Mood</h2><div id="mood" class="mood"></div></div>
-          <div class="card"><h2>Today Brief</h2><div id="brief" class="list"></div></div>
-        </div>
-        <div class="card" style="margin-top:14px"><h2>World Market Strip</h2><div id="indices" class="index-strip"></div></div>
-        <div class="card" style="margin-top:14px"><h2>Trade Monitor</h2><div id="tradeBoard" class="market-grid"></div></div>
-        <div class="grid two" style="margin-top:14px">
-          <div class="card"><h2>My Watchlist</h2><div id="watchlist" class="list"></div></div>
-          <div class="card"><h2>DC Retirement</h2><div id="dc"></div></div>
-        </div>
-        <div class="grid two" style="margin-top:14px">
-          <div class="card"><h2>Sector Flow</h2><div id="sectors" class="heat"></div></div>
-          <div class="card"><h2>Alert Preview</h2><div id="alerts" class="list"></div></div>
+        <div class="dashboard-shell">
+          <div class="main-board">
+            <div class="market-overview">
+              <div class="card hero-mood"><div class="section-head"><h2>시장 상태</h2><span class="muted">실시간 데이터 기반</span></div><div id="mood" class="mood"></div></div>
+              <div class="card brief-card"><div class="section-head"><h2>오늘의 체크포인트</h2><span class="muted">요약</span></div><div id="brief" class="list"></div></div>
+            </div>
+            <div class="card"><div class="section-head"><h2>글로벌 마켓</h2><span class="muted">지수 / 금리 / 환율 / 변동성</span></div><div id="indices" class="quote-table"></div></div>
+            <div class="card"><div class="section-head"><h2>주요 종목 모니터</h2><span class="muted">가격, 변동률, 신호</span></div><div id="tradeBoard" class="asset-table"></div></div>
+            <div class="grid two">
+              <div class="card"><h2>관심 ETF</h2><div id="watchlist" class="list"></div></div>
+              <div class="card"><h2>DC 퇴직연금</h2><div id="dc"></div></div>
+            </div>
+            <div class="grid two">
+              <div class="card"><h2>섹터 흐름</h2><div id="sectors" class="heat"></div></div>
+              <div class="card"><h2>위험 알림</h2><div id="alerts" class="list"></div></div>
+            </div>
+          </div>
+          <div class="right-rail">
+            <div class="card"><div class="section-head"><h2>실시간 랭킹</h2><span class="muted">변동률 기준</span></div><div id="ranking" class="list"></div></div>
+            <div class="card"><div class="section-head"><h2>뉴스 근거</h2><span class="muted">출처와 링크</span></div><div id="newsRefs" class="list"></div></div>
+            <div class="card"><h2>데이터 메모</h2><p class="muted">표시된 분석은 투자 참고 신호이며 자동 매수/매도 판단이 아닙니다.</p></div>
+          </div>
         </div>
       </section>
       <section id="reports">
@@ -355,17 +423,22 @@ class Handler(BaseHTTPRequestHandler):
       const color = tone === "down" ? "#3182f6" : tone === "warn" ? "#f59f00" : tone === "flat" ? "#8b95a1" : "#f04452";
       return `<svg class="spark" viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true"><polyline points="${coords}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><line x1="0" y1="39" x2="100" y2="39" stroke="#e5e8eb" stroke-width="1"/></svg>`;
     }
+    function miniSpark(points, tone) {
+      return spark(points, tone).replace('class="spark"', 'class="spark tiny-spark"');
+    }
     async function loadDashboard() {
       const data = await fetch("/api/dashboard").then(r => r.json());
       setDataAsOf(data.as_of, data.source, data.cache_status, data.refresh_seconds);
-      document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="up">check</span></div>`).join("")}</div></div>`;
-      document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span>${i + 1}. ${b}</span></div>`).join("");
-      document.getElementById("indices").innerHTML = data.indices.map(i => `<div class="index-chip"><div class="market-head"><div><h3>${i.symbol}</h3><p class="muted">${i.name}</p></div><b class="${toneClass(i.tone)}">${i.change}</b></div><div class="value">${i.value}</div><div class="mini-meta"><span>${i.session}</span><span>${i.volume}</span></div></div>`).join("");
-      document.getElementById("tradeBoard").innerHTML = data.trade_board.map(t => `<div class="market-tile"><div class="market-head"><div><div class="market-symbol">${t.symbol}</div><p class="muted">${t.name}</p></div><b class="${toneClass(t.tone)}">${t.change}</b></div><div class="price">${t.price}</div>${spark(t.spark, t.tone)}<div class="mini-meta"><span>${t.signal}</span><span>${t.tone.toUpperCase()}</span></div></div>`).join("");
+      document.getElementById("mood").innerHTML = `<div class="score"><b>${data.mood.score}</b></div><div><h3>${data.mood.state}</h3><p class="muted">${data.mood.plain}</p><p>${data.badges.map(b => `<span class="badge">${b}</span>`).join("")}</p><div class="list">${data.mood.drivers.map(d => `<div class="row"><span>${d}</span><span class="risk-pill">확인</span></div>`).join("")}</div></div>`;
+      document.getElementById("brief").innerHTML = data.brief.map((b,i) => `<div class="row"><span class="brief-no">${i + 1}</span><span>${b}</span></div>`).join("");
+      document.getElementById("indices").innerHTML = `<div class="quote-row quote-head"><span>자산</span><span>현재</span><span>변동</span><span>구분</span></div>` + data.indices.map(i => `<div class="quote-row"><span><b>${i.symbol}</b><br><span class="asset-sub">${i.name}</span></span><span class="value">${i.value}</span><span class="${toneClass(i.tone)}"><b>${i.change}</b></span><span class="mini-meta">${i.session} / ${i.volume}</span></div>`).join("");
+      document.getElementById("tradeBoard").innerHTML = `<div class="asset-row asset-head"><span>종목</span><span>현재가</span><span>등락률</span><span>흐름</span></div>` + data.trade_board.map(t => `<div class="asset-row"><div class="asset-name"><span class="avatar">${t.symbol.slice(0,2)}</span><span><span class="asset-symbol">${t.symbol}</span><br><span class="asset-sub">${t.name} · ${t.signal}</span></span></div><div class="asset-price">${t.price}</div><div class="asset-change ${toneClass(t.tone)}">${t.change}</div>${miniSpark(t.spark, t.tone)}</div>`).join("");
       document.getElementById("watchlist").innerHTML = data.watchlist.map(w => `<div><div class="row"><span><b>${w.symbol}</b> <span class="muted">${w.name}</span><br><span>${w.signal}</span></span><span class="${w.change && w.change.startsWith('-') ? 'down' : 'up'}">${w.change || ''}</span></div><div class="mini-meta"><span>${w.risk}</span><span>Signal ${w.score}</span></div><div class="bar"><span style="width:${w.score}%"></span></div></div>`).join("");
       document.getElementById("dc").innerHTML = `<h3>${data.dc.style}</h3><p class="muted">${data.dc.plain_language}</p><div class="list" style="margin-top:12px">${data.dc.allocation.map(a => `<div><div class="row"><span>${a.label}</span><span>현재 ${a.current}% / 목표 ${a.target}%</span></div><div class="bar"><span style="width:${a.current}%"></span></div></div>`).join("")}</div><p class="badge">Risk Score ${data.dc.risk_score}</p><p class="muted" style="margin-top:10px">${data.dc.rebalance}</p>`;
       document.getElementById("sectors").innerHTML = data.sectors.map(s => `<div><b>${s.name}</b><p class="${toneClass(s.tone)}">${s.change}</p></div>`).join("");
       document.getElementById("alerts").innerHTML = data.alerts.map(a => `<div class="row"><span><b>${a.title}</b><br><span class="muted">${a.message}</span></span><span class="badge">${a.level}</span></div>`).join("");
+      document.getElementById("ranking").innerHTML = (data.rankings || []).map(r => `<div class="rank-row"><span class="rank-num">${r.rank}</span><span><b>${r.symbol}</b><br><span class="asset-sub">${r.name}</span></span><span class="${toneClass(r.tone)}"><b>${r.change}</b></span></div>`).join("");
+      document.getElementById("newsRefs").innerHTML = (data.news_sources || []).map(n => `<div class="news-row"><span class="news-source">${n.source}</span><a class="news-link" href="${n.url}" target="_blank" rel="noreferrer">${n.title}</a><p class="muted">${n.summary}</p><a class="detail-link" href="${n.url}" target="_blank" rel="noreferrer">자세히 보기</a></div>`).join("");
     }
     async function loadReports(type="morning") {
       const list = await fetch("/api/reports").then(r => r.json());
