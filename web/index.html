@@ -271,6 +271,44 @@
       .hero-mood { min-height: 0; }
       .mobilebar button { font-size: 12px; }
     }
+    /* Keep compact desktop windows in desktop mode. */
+    @media (min-width: 769px) and (max-width: 980px) {
+      .shell { display: grid; grid-template-columns: 176px minmax(0, 1fr); }
+      aside { display: block; padding: 16px 10px 24px; }
+      main { min-width: 0; padding: 18px 18px 48px; }
+      .mobilebar { display: none; }
+      .right-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .right-rail .card:first-child { grid-row: span 2; }
+    }
+    /* Phones get a single-column layout and a six-item bottom navigation. */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .shell { display: block; min-width: 0; }
+      aside { display: none; }
+      main { width: 100%; min-width: 0; padding: 14px 12px 72px; overflow-x: hidden; }
+      header, .header-actions { display: grid; width: 100%; min-width: 0; gap: 10px; }
+      h1 { font-size: 25px; }
+      .clock { width: 100%; min-width: 0; }
+      .workspace-bar { margin: 0 -12px 12px; padding: 0 12px 12px; }
+      .dashboard-shell, .market-overview, .right-rail, .finance-grid,
+      .money-grid, .edit-grid, .info-grid, .top, .two, .cards, .channels,
+      .ticker, .market-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .main-board, .right-rail, .card, .list, .row, .tile, .info-card {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .right-rail { position: static; }
+      .right-rail .card:first-child { grid-row: auto; }
+      .row > span:first-child, .news-link, .muted { overflow-wrap: anywhere; }
+      .quote-row { grid-template-columns: minmax(92px, 1.2fr) minmax(64px, .8fr) minmax(54px, .65fr); gap: 6px; padding: 9px 4px; }
+      .asset-row { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 4px; }
+      .asset-row .asset-price { text-align: right; }
+      .asset-row .tiny-spark { grid-column: 1 / -1; min-width: 0; }
+      .mobilebar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .mobilebar button { min-width: 0; padding: 11px 2px; font-size: 10px; line-height: 1.25; overflow-wrap: anywhere; }
+    }
   </style>
 </head>
 <body>
