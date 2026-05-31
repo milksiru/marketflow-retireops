@@ -25,9 +25,6 @@ spec:
           envFrom:
             - secretRef:
                 name: marketflow-retireops-secrets
-          env:
-            - name: MARKETFLOW_DB
-              value: /data/marketflow.db
           volumeMounts:
             - name: data
               mountPath: /data

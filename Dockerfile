@@ -1,12 +1,16 @@
-FROM 192.168.55.148:5000/mirror/docker.io/library/python:3.12-alpine
+FROM 192.168.55.148:5000/mirror/docker.io/library/golang:1.24-alpine AS builder
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV MARKETFLOW_DB=/data/marketflow.db
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY *.go ./
+COPY web/ ./web/
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/marketflow-retireops .
 
-WORKDIR /app
-RUN pip install --no-cache-dir pg8000==1.31.2
-COPY app/ /app/app/
+FROM 192.168.55.148:5000/mirror/docker.io/library/alpine:3.21
+
+RUN apk add --no-cache ca-certificates tzdata
+COPY --from=builder /out/marketflow-retireops /usr/local/bin/marketflow-retireops
 
 EXPOSE 8080
-CMD ["python", "-m", "app.server"]
+ENTRYPOINT ["/usr/local/bin/marketflow-retireops"]

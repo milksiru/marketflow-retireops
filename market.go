@@ -1,0 +1,64 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+	"time"
+)
+
+var symbols = []struct{ yahoo, id, name string }{
+	{"^GSPC", "S&P500", "US Large Cap"}, {"^IXIC", "Nasdaq", "US Tech"}, {"^KS11", "KOSPI", "Korea"},
+	{"^N225", "Nikkei", "Japan"}, {"KRW=X", "USD/KRW", "FX"}, {"^TNX", "US10Y", "Treasury"},
+	{"^VIX", "VIX", "Volatility"}, {"BTC-USD", "BTC", "Crypto"}, {"NVDA", "NVDA", "NVIDIA"},
+	{"AAPL", "AAPL", "Apple"}, {"MSFT", "MSFT", "Microsoft"}, {"TSLA", "TSLA", "Tesla"},
+	{"SOXX", "SOXX", "Semiconductor ETF"}, {"QQQ", "QQQ", "Nasdaq 100 ETF"}, {"TLT", "TLT", "Long Bond ETF"},
+	{"SCHD", "SCHD", "Dividend ETF"},
+}
+
+func fetchLivePrices() ([]MarketPrice, error) {
+	client := &http.Client{Timeout: 8 * time.Second}
+	out := []MarketPrice{}
+	observed := time.Now().Format(time.RFC3339)
+	for _, item := range symbols {
+		endpoint := "https://query1.finance.yahoo.com/v8/finance/chart/" + url.PathEscape(item.yahoo) + "?range=1d&interval=5m"
+		req, _ := http.NewRequest(http.MethodGet, endpoint, nil)
+		req.Header.Set("User-Agent", "MarketFlow-RetireOps/2.0")
+		res, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		var body struct {
+			Chart struct {
+				Result []struct {
+					Meta struct {
+						RegularMarketPrice float64 `json:"regularMarketPrice"`
+						PreviousClose      float64 `json:"previousClose"`
+					} `json:"meta"`
+				} `json:"result"`
+			} `json:"chart"`
+		}
+		err = json.NewDecoder(res.Body).Decode(&body)
+		res.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		if len(body.Chart.Result) == 0 {
+			return nil, fmt.Errorf("missing market symbol: %s", item.yahoo)
+		}
+		meta := body.Chart.Result[0].Meta
+		change := 0.0
+		if meta.PreviousClose != 0 {
+			change = (meta.RegularMarketPrice - meta.PreviousClose) / meta.PreviousClose * 100
+		}
+		out = append(out, MarketPrice{item.id, item.name, meta.RegularMarketPrice, change, 1000000, "yahoo-finance-chart", observed})
+	}
+	return out, nil
+}
+
+func mockPrices() []MarketPrice {
+	now := time.Now().Format(time.RFC3339)
+	values := []MarketPrice{{"S&P500", "US Large Cap", 5304, 1.2, 1e6, "mock", now}, {"Nasdaq", "US Tech", 16920, 1.6, 1e6, "mock", now}, {"KOSPI", "Korea", 2724, .4, 1e6, "mock", now}, {"Nikkei", "Japan", 39102, .7, 1e6, "mock", now}, {"USD/KRW", "FX", 1360, .3, 1e6, "mock", now}, {"US10Y", "Treasury", 4.32, .4, 1e6, "mock", now}, {"VIX", "Volatility", 15.8, -.7, 1e6, "mock", now}, {"BTC", "Crypto", 68420, 2.4, 1e6, "mock", now}, {"NVDA", "NVIDIA", 1128.4, 3.8, 1e6, "mock", now}, {"AAPL", "Apple", 191.2, .9, 1e6, "mock", now}, {"MSFT", "Microsoft", 431.6, 1.1, 1e6, "mock", now}, {"TSLA", "Tesla", 178, -1.4, 1e6, "mock", now}, {"SOXX", "Semiconductor ETF", 240.8, 2.1, 1e6, "mock", now}, {"QQQ", "Nasdaq 100 ETF", 458.5, 1.5, 1e6, "mock", now}, {"TLT", "Long Bond ETF", 91.4, -.8, 1e6, "mock", now}, {"SCHD", "Dividend ETF", 78.6, .2, 1e6, "mock", now}, {"WTI", "Oil", 78.2, .1, 1e6, "mock", now}}
+	return values
+}

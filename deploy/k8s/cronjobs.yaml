@@ -14,7 +14,7 @@ spec:
           containers:
             - name: collector
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "collect"]
+              args: ["collect"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -42,7 +42,7 @@ spec:
           containers:
             - name: analyzer
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "analyze"]
+              args: ["analyze"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -70,7 +70,7 @@ spec:
           containers:
             - name: daily-report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "daily-report"]
+              args: ["daily-report"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -98,7 +98,7 @@ spec:
           containers:
             - name: sms-report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "send-sms-report"]
+              args: ["send-sms-report"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -126,7 +126,7 @@ spec:
           containers:
             - name: sms-weekly-report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "send-sms-report"]
+              args: ["send-sms-report"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -154,7 +154,7 @@ spec:
           containers:
             - name: sms-risk-alert
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "send-risk-alert"]
+              args: ["send-risk-alert"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -182,7 +182,7 @@ spec:
           containers:
             - name: report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "morning"]
+              args: ["morning"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -210,7 +210,7 @@ spec:
           containers:
             - name: report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "market-open"]
+              args: ["market-open"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -238,7 +238,7 @@ spec:
           containers:
             - name: report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "evening"]
+              args: ["evening"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -266,7 +266,7 @@ spec:
           containers:
             - name: report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "weekly"]
+              args: ["weekly"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets
@@ -294,7 +294,7 @@ spec:
           containers:
             - name: report
               image: 192.168.55.148:5000/milksiru/marketflow-retireops:e1599d27a048
-              command: ["python", "-m", "app.jobs", "monthly-dc"]
+              args: ["monthly-dc"]
               envFrom:
                 - secretRef:
                     name: marketflow-retireops-secrets

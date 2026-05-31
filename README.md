@@ -1,6 +1,6 @@
 # marketflow-retireops
 
-MarketFlow RetireOps is a market briefing and DC retirement-plan reference service.
+MarketFlow RetireOps is a Go market briefing and DC retirement-plan reference service.
 
 It is wired for the workstation Kubernetes delivery flow:
 
@@ -35,7 +35,8 @@ push to main
 - Provider interface for Email, SMS, Kakao, Telegram, and Microsoft Teams
 - Email, Teams, and Telegram providers are implemented with real send hooks
 - SMS and Kakao providers are mock providers with integration-ready config
-- SQLite log tables for notification channels, logs, and report subscriptions
+- PostgreSQL tables for notification channels, logs, report subscriptions, market data, and family-plan settings
+- In-memory storage fallback for local development when `DATABASE_HOST` is not set
 - Kubernetes CronJobs for Morning, Market Open, Evening, Weekly, and Monthly DC reports
 
 ## Secrets
@@ -79,8 +80,10 @@ Secrets stay in Kubernetes Secret only. Provider config in the DB is for non-sen
 ## Local API
 
 ```bash
-python -m app.server
+go run .
 ```
+
+The production container builds a single Go binary and runs it on Alpine Linux.
 
 ## Cron Schedules
 
@@ -111,7 +114,7 @@ Analysis pipeline:
 - `daily-report-cronjob`: 07:30 KST on weekdays, generates the Daily Report.
 - `sms-morning-report-cronjob`: 07:35 KST on weekdays, sends the Daily Report by SMS.
 - `sms-risk-alert-cronjob`: every 15 minutes, sends risk alert SMS through the configured provider.
-- MVP storage uses the existing persistent app database. The repository layer is isolated so it can be migrated to PostgreSQL next.
+- Production storage uses PostgreSQL. Local runs without `DATABASE_HOST` use the in-memory fallback.
 
 Run the full MVP flow manually:
 
