@@ -284,6 +284,14 @@ class Handler(BaseHTTPRequestHandler):
     .money-card { background: var(--panel2); border-radius: 8px; padding: 14px; min-height: 92px; }
     .money-card span { color: var(--muted); font-size: 12px; font-weight: 800; }
     .money-card b { display: block; margin-top: 8px; font-size: 22px; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .presale-card { margin-top: 14px; padding: 14px; border-radius: 8px; background: #eef6ff; border: 1px solid #d6e9ff; }
+    .presale-top { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .presale-title { font-size: 18px; font-weight: 950; }
+    .presale-status { display: inline-flex; padding: 5px 8px; border-radius: 999px; background: #fff; color: var(--blue); font-size: 12px; font-weight: 900; white-space: nowrap; }
+    .presale-meta { color: var(--soft); font-size: 13px; line-height: 1.55; margin-top: 8px; }
+    .presale-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin-top: 10px; }
+    .presale-list div { color: var(--soft); font-size: 12px; line-height: 1.45; }
+    .presale-list div::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--blue); margin-right: 6px; vertical-align: 2px; }
     .finance-list { display: grid; gap: 6px; }
     .finance-list .row { padding: 10px 0; }
     .child-hero { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
@@ -318,6 +326,7 @@ class Handler(BaseHTTPRequestHandler):
       .asset-row .tiny-spark { grid-column: 1 / -1; }
       .hero-mood .mood { grid-template-columns: 1fr; }
       .finance-grid, .money-grid, .edit-grid, .info-grid { grid-template-columns: 1fr; }
+      .presale-top, .presale-list { display: grid; grid-template-columns: 1fr; }
       .child-hero { grid-template-columns: 1fr; }
     }
   </style>
@@ -530,7 +539,7 @@ class Handler(BaseHTTPRequestHandler):
       const steps = document.getElementById("familySteps");
       if (steps) steps.innerHTML = plan.steps.map(s => `<div class="step-item">${s}</div>`).join("");
       const overview = document.getElementById("familyOverview");
-      if (overview) overview.innerHTML = `<div class="money-grid">${plan.metrics.map(m => `<div class="money-card"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div><p class="muted" style="margin-top:14px">${plan.summary}</p>`;
+      if (overview) overview.innerHTML = `<div class="money-grid">${plan.metrics.map(m => `<div class="money-card"><span>${m.label}</span><b>${m.value}</b></div>`).join("")}</div><p class="muted" style="margin-top:14px">${plan.summary}</p><div class="presale-card"><div class="presale-top"><div><div class="presale-title">${plan.presale.title}</div><div class="presale-meta">${plan.presale.notice}<br>${plan.presale.expected}</div></div><span class="presale-status">${plan.presale.status}</span></div><p class="presale-meta">${plan.presale.plan}</p><div class="presale-list">${plan.presale.focus.map(f => `<div>${f}</div>`).join("")}</div><p class="presale-meta">${plan.presale.note}</p></div>`;
       const assets = document.getElementById("familyAssets");
       if (assets) assets.innerHTML = plan.assets.map(a => `<div class="row"><span>${a.label}</span><b>${a.value}</b></div>`).join("");
       const debts = document.getElementById("familyDebts");
